@@ -8,6 +8,7 @@ import System.Exit
 
 import Data.List
 import Data.Maybe
+import Data.Char
 
 import Idris.Package
 import Idris.Package.Common
@@ -65,3 +66,9 @@ printPrettyPkgDesc ipkg = do
     sPutWordsLn ["WWW:\t",     fromMaybe "Not Provided" $ pkghomepage ipkg]
     sPutWordsLn ["DCVS:\t",    fromMaybe "Not Provided" $ pkgsourceloc ipkg]
     sPutWordsLn ["Deps:\t",    show (pkgdeps ipkg)]
+
+pkgSearch :: String -> PkgDesc -> Bool
+pkgSearch x ipkg = (lowerName x) `isInfixOf` (lowerName $ pkgname ipkg)
+  where
+    lowerName :: String -> String
+    lowerName = map toLower

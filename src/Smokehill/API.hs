@@ -31,10 +31,11 @@ cleanCache forReal = do
 
 searchForPackage :: String -> Smokehill ()
 searchForPackage pkg = do
-  res <- searchPackages pkg
+  libs <- getLibrary
+  let res = filter (pkgSearch pkg) libs
   case res of
-    Nothing  -> sPutWordsLn ["Package not found", pkg]
-    Just pkg -> sPrintLn pkg
+    []   -> sPutWordsLn ["Package not found", pkg]
+    pkgs -> mapM_ (\x -> sPutWordsLn ["-->", pkgname x]) pkgs
 
 showPackage :: String -> Smokehill ()
 showPackage pkg = do
