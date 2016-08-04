@@ -12,38 +12,29 @@ import Data.Maybe
 import Idris.Package
 import Idris.Package.Common
 
+import Smokehill.Model
+import Smokehill.URL
+
 import Paths_smokehill
 
-getPkgFileLoc :: String -> IO String
-getPkgFileLoc fn = do
-  ddir <- getDataDir
-  pure (ddir </> "packagedb" </> fn -<.> "ipkg")
-
-getPkgFileContents :: String -> IO String
-getPkgFileContents fn = do
-  ddir <- getDataDir
-  desc <- readFile (ddir </> "packagedb" </> fn -<.> "ipkg")
-  pure desc
-
-getPkgFile :: String -> IO PkgDesc
-getPkgFile fn = do
-  pfileloc <- getPkgFileLoc fn
-  getPkgDesc pfileloc
-
-searchPackages :: String -> IO (Maybe FilePath)
+searchPackages :: String -> Smokehill (Maybe PkgDesc)
 searchPackages str = do
-  ddir <- getDataDir
-  let pdb = ddir </> "packagedb"
-  es <- listDirectory pdb
-  let es' = map dropExtensions es
-  let res = find (str==) es'
+  libs <- getLibrary
+  let res = find (\pkg -> str == pkgname pkg) libs
   pure res
 
+loadLibrary :: IO [PkgDesc]
+loadLibrary = do
+  ddir <- getDataDir
+  ps <- listDirectory $ ddir </> "packagedb"
+  let ps' = filter (\x -> takeExtension x == ".ipkg") ps
+  ps'' <- mapM (\x -> makeAbsolute (ddir </> "packagedb" </> x)) ps'
+  mapM getPkgDesc ps''
 
-getCacheDirectory :: IO FilePath
+getCacheDirectory :: Smokehill FilePath
 getCacheDirectory = do
-  cdir <- getXdgDirectory XdgCache "smokehill"
-  createDirectoryIfMissing True cdir
+  cdir <- runIO $ getXdgDirectory XdgCache "smokehill"
+  runIO $ createDirectoryIfMissing True cdir
   pure cdir
 
 cloneGitRepo :: FilePath -> String -> FilePath -> IO ExitCode

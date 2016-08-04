@@ -24,6 +24,8 @@ executable smokehill
                      , Smokehill.URL
                      , Smokehill.Options
                      , Smokehill.Utils
+                     , Smokehill.Model
+                     , Smokehill.API
                      , Utils
 
   default-language:    Haskell2010
@@ -35,3 +37,4 @@ executable smokehill
                      , process
                      , containers
                      , url
+                     , transformers

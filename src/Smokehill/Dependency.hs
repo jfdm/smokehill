@@ -10,7 +10,8 @@ import Data.List
 import Idris.Package.Common
 import Idris.Package
 
-import Smokehill.URL
+
+import Smokehill.Model
 import Smokehill.Utils
 
 import Utils
@@ -53,20 +54,23 @@ buildGraph xs = DepGraph legend' graph
 pruneDeps :: [String] -> [String]
 pruneDeps xs = (\\) xs ["base", "pruvoilj", "effects", "prelude"]
 
-getInstallOrder :: PkgDesc -> IO (List FilePath)
+getInstallOrder :: PkgDesc -> Smokehill (List PkgDesc)
 getInstallOrder ipkg = do
     ds <- doGet [ipkg] []
-    putStrLn $ show ds
+    sPutStrLn $ show ds
     let dg  = buildGraph ds
         os  = reverse $ topSort (graph dg)
         os' = map (\o -> lookup o (legend dg)) os
-    pure $ nub $ catMaybes os'
+        ds' = nub $ catMaybes os'
+    res <- mapM searchPackages ds'
+    pure $ catMaybes res
   where
     doGet :: List PkgDesc
           -> List (String, List String)
-          -> IO (List (String, List String))
+          -> Smokehill (List (String, List String))
     doGet []     res = return res
     doGet (x:xs) res = do
       let deps = pruneDeps (pkgdeps x)
-      ds <- mapM getPkgFile deps
+      ds' <- mapM searchPackages deps
+      let ds = catMaybes ds'
       doGet (ds ++ xs) ([(pkgname x, deps)] ++ res)
