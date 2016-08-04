@@ -37,16 +37,16 @@ resolver: lts-6.10
 # will not be run. This is useful for tweaking upstream packages.
 packages:
   - '.'
-  - location:
-      git: git@github.com:idris-lang/Idris-dev
-      commit: 588e347df2321cb7067580fe93b09ee5866fe9cb
-    extra-dep: true
+#  - location:
+#      git: git@github.com:idris-lang/Idris-dev
+#      commit: 588e347df2321cb7067580fe93b09ee5866fe9cb
+#    extra-dep: true
 
 # Dependency packages to be pulled from upstream that are not in the resolver
 # (e.g., acme-missiles-0.3)
 extra-deps:
   - trifecta-1.6
-#  - idris-0.12.2
+  - idris-0.12.2
   - directory-1.2.6.3
 
 # Override default flag values for local packages and extra-deps
