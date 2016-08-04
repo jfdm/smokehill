@@ -41,13 +41,12 @@ showPackage pkg = do
   res <- searchPackages pkg
   case res of
     Nothing  -> sPutWordsLn ["Package not found", pkg]
-    Just pkg -> sPutStrLn "Not implemented"
+    Just pkg -> printPrettyPkgDesc pkg
 
 listInstalled :: Smokehill ()
 listInstalled = do
   pkgs <- runIO installedPackages
   mapM_ sPutStrLn pkgs
-
 
 installPackage :: String -> Bool -> Smokehill()
 installPackage pkg dryrun = do

@@ -56,3 +56,12 @@ cloneGitRepo dest loc pkg = do
           createDirectoryIfMissing True pkg
           errno <- rawSystem "git" ["clone", loc, pkg]
           pure errno
+
+printPrettyPkgDesc :: PkgDesc -> Smokehill ()
+printPrettyPkgDesc ipkg = do
+    sPutWordsLn ["Name:\t",    pkgname ipkg]
+    sPutWordsLn ["Version:\t", fromMaybe "Not Provided" $ pkgversion ipkg]
+    sPutWordsLn ["Brief:\t",   fromMaybe "Not Provided" $ pkgbrief ipkg]
+    sPutWordsLn ["WWW:\t",     fromMaybe "Not Provided" $ pkghomepage ipkg]
+    sPutWordsLn ["DCVS:\t",    fromMaybe "Not Provided" $ pkgsourceloc ipkg]
+    sPutWordsLn ["Deps:\t",    show (pkgdeps ipkg)]
