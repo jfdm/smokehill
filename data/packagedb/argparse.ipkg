@@ -1,0 +1,23 @@
+package argparse
+
+author     = Jan de Muijnck-Hughes
+maintainer = Jan de Muijnck-Hughes
+license    = BSD3 but see LICENSE for more information
+brief      = "A simple argument parser."
+readme     = README.md
+version    = 0.1
+sourceloc  = git://git@github.com:jfdm/idris-argparse.git
+bugtracker = http://www.github.com/jfdm/idris-argparse/issues
+
+pkgs = lightyear
+     , test
+
+modules = ArgParse.Utils
+        , ArgParse.Parser
+        , ArgParse.Error
+        , ArgParse.Model
+        , ArgParse
+
+        , ArgParse.Test
+
+tests = ArgParse.Test.runTests
