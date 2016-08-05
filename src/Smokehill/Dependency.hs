@@ -57,7 +57,6 @@ pruneDeps xs = (\\) xs ["base", "pruvoilj", "effects", "prelude"]
 getInstallOrder :: PkgDesc -> Smokehill (List PkgDesc)
 getInstallOrder ipkg = do
     ds <- doGet [ipkg] []
-    sPutStrLn $ show ds
     let dg  = buildGraph ds
         os  = reverse $ topSort (graph dg)
         os' = map (\o -> lookup o (legend dg)) os
