@@ -93,15 +93,16 @@ doInstallPackage ipkg dryrun = do
           cdir <- getCacheDirectory
           pkg' <- runIO $ makeAbsolute (cdir </> (pkgname ipkg))
           d    <- runIO $ doesDirectoryExist pkg'
-          when d $ do
-            sPutWordsLn ["Directory already exists, skipping."]
-          when (not dryrun) $ do
-            sPutWordsLn ["Cloning Git Repo"]
-            errno <- runIO $ cloneGitRepo cdir (drop 6 sloc) (pkgname ipkg)
-            case errno of
-              ExitFailure _     -> runIO $ exitWith errno
-              ExitSuccess       -> do
-                runIO $ withCurrentDirectory pkg' $ do
-                  let pfile = pkg' </> (pkgname ipkg) -<.> "ipkg"
-                  putStrLn $ unwords ["Installing", show pfile]
-                  when (not dryrun) $ buildPkg [] True (True, pfile)
+          if d
+            then sPutWordsLn ["Directory already exists, skipping."]
+            else do
+            when (not dryrun) $ do
+              sPutWordsLn ["Cloning Git Repo"]
+              errno <- runIO $ cloneGitRepo cdir (drop 6 sloc) (pkgname ipkg)
+              case errno of
+                ExitFailure _     -> runIO $ exitWith errno
+                ExitSuccess       -> do
+                  runIO $ withCurrentDirectory pkg' $ do
+                    let pfile = pkg' </> (pkgname ipkg) -<.> "ipkg"
+                    putStrLn $ unwords ["Installing", show pfile]
+                    when (not dryrun) $ buildPkg [] True (True, pfile)
