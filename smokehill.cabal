@@ -1,6 +1,6 @@
 name:                smokehill
 version:             0.1.0.0
-synopsis:            Simple project template from stack
+synopsis:            A simple package helper for idris.
 description:         Please see README.md
 homepage:            https://github.com/jfdm/smokehill#readme
 license:             BSD3
@@ -8,7 +8,9 @@ license-file:        LICENSE
 author:              Jan de Muijnck-Hughes
 maintainer:          j.demuijnckhughes@gmail.com
 copyright:           BSD3
-category:            Web
+category:            Dependent Types
+stability:           Beta
+
 build-type:          Simple
 cabal-version:       >=1.10
 
