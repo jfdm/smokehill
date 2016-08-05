@@ -1,6 +1,7 @@
 module Smokehill.DVCS
   (
-    whichDVCS
+    DVCS()
+  , whichDVCS
   , dvcsClone
   , dvcsUpdate
   ) where
