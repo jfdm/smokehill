@@ -17,7 +17,7 @@ import Idris.Package.Common
 import Idris.Package
 
 import Smokehill.Model
-import Smokehill.URL
+import Smokehill.DVCS
 import Smokehill.Dependency
 import Smokehill.Utils
 
@@ -84,25 +84,33 @@ installPackage pkg dryrun = do
 doInstallPackage :: PkgDesc -> Bool -> Smokehill ()
 doInstallPackage ipkg dryrun = do
   sPutWordsLn ["Attempting to install:", pkgname ipkg]
+  cdir <- getCacheDirectory
+  pkg' <- runIO $ makeAbsolute (cdir </> (pkgname ipkg))
+  d    <- runIO $ doesDirectoryExist pkg'
+  let pfile = pkg' </> (pkgname ipkg) -<.> "ipkg"
   case (pkgsourceloc ipkg) of
     Nothing   -> sPutWordsLn ["Source Location not specified"]
     Just sloc -> do
-      if (not $ isGit sloc)
-        then sPutWordsLn ["Package is not a valid url",  sloc]
-        else do
-          cdir <- getCacheDirectory
-          pkg' <- runIO $ makeAbsolute (cdir </> (pkgname ipkg))
-          d    <- runIO $ doesDirectoryExist pkg'
+      case whichDVCS sloc of
+        Nothing   -> sPutWordsLn ["Package is not a valid DVCS url",  sloc]
+        Just dvcs -> do
           if d
-            then sPutWordsLn ["Directory already exists, skipping."]
-            else do
-            when (not dryrun) $ do
-              sPutWordsLn ["Cloning Git Repo"]
-              errno <- runIO $ cloneGitRepo cdir (drop 6 sloc) (pkgname ipkg)
+            then do
+              sPutWordsLn ["Directory already exists, checking for updates."]
+              errno <- runIO $ dvcsUpdate dvcs pkg'
               case errno of
                 ExitFailure _     -> runIO $ exitWith errno
                 ExitSuccess       -> do
-                  runIO $ withCurrentDirectory pkg' $ do
-                    let pfile = pkg' </> (pkgname ipkg) -<.> "ipkg"
-                    putStrLn $ unwords ["Installing", show pfile]
-                    when (not dryrun) $ buildPkg [] True (True, pfile)
+                  sPutWordsLn ["Attempting to install using:", pfile]
+                  when (not dryrun) $ runIO $ buildPkg [] True (True, pfile)
+            else do
+              sPutWordsLn ["Directory doesn't exists, cloning."]
+              sPutWordsLn ["Cloning Git Repo"]
+              when (not dryrun) $ do
+                errno <- runIO $ dvcsClone dvcs cdir (pkgname ipkg)
+                case errno of
+                  ExitFailure _     -> runIO $ exitWith errno
+                  ExitSuccess       -> do
+                    sPutWordsLn ["Attempting to install using:", pfile]
+                    runIO $ withCurrentDirectory pkg' $ do
+                      when (not dryrun) $ buildPkg [] True (True, pfile)

@@ -16,7 +16,6 @@ import Idris.Package
 import Idris.Package.Common
 
 import Smokehill.Model
-import Smokehill.URL
 
 import Paths_smokehill
 
@@ -52,26 +51,6 @@ getCacheDirectory = do
   cdir <- runIO $ getXdgDirectory XdgCache "smokehill"
   runIO $ createDirectoryIfMissing True cdir
   pure cdir
-
-cloneGitRepo :: FilePath -> String -> FilePath -> IO ExitCode
-cloneGitRepo dest loc pkg = do
-    dest' <- makeAbsolute dest
-    withCurrentDirectory dest $ do
-      clone pkg loc
-  where
-    -- TODO better err reporting
-    clone :: String -> String -> IO ExitCode
-    clone pkg loc = do
-      res <- findExecutable "git"
-      case res of
-        Nothing -> do
-          putStrLn "Git not installed."
-          pure $ ExitFailure (-1)
-        Just _  -> do
-          putStrLn $ unwords ["git clone", loc, pkg]
-          createDirectoryIfMissing True pkg
-          errno <- rawSystem "git" ["clone", loc, pkg]
-          pure errno
 
 printPrettyPkgDesc :: PkgDesc -> Smokehill ()
 printPrettyPkgDesc ipkg = do

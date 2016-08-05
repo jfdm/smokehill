@@ -23,10 +23,10 @@ executable smokehill
   main-is:             Main.hs
   other-modules:       Smokehill
                      , Smokehill.Dependency
-                     , Smokehill.URL
                      , Smokehill.Options
                      , Smokehill.Utils
                      , Smokehill.Model
+                     , Smokehill.DVCS
                      , Smokehill.API
                      , Utils
 

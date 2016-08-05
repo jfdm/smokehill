@@ -20,7 +20,6 @@ import Smokehill.Model
 import Smokehill.Options
 import Smokehill.API
 import Smokehill.Dependency
-import Smokehill.URL
 import Smokehill.Utils
 
 import Utils
