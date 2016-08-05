@@ -21,6 +21,19 @@ import Smokehill.URL
 import Smokehill.Dependency
 import Smokehill.Utils
 
+
+showPaths :: Smokehill ()
+showPaths = do
+  cdir <- getCacheDirectory
+  pdir <- getPackageDB
+  ldir <- getLibDir
+
+  sPutStrLn "Smokehill Paths"
+  sPutWordsLn ["--> Cache Directory:", cdir]
+  sPutWordsLn ["--> iPKG Database:", pdir]
+  sPutStrLn "Idris Paths"
+  sPutWordsLn ["--> Library Directory:", ldir]
+
 cleanCache :: Bool -> Smokehill ()
 cleanCache forReal = do
   when (not forReal) $ sPutStrLn "To clean cache for real please use '--force'."

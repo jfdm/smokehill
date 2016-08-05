@@ -10,6 +10,8 @@ import Data.List
 import Data.Maybe
 import Data.Char
 
+import IRTS.System (getIdrisLibDir)
+
 import Idris.Package
 import Idris.Package.Common
 
@@ -17,6 +19,10 @@ import Smokehill.Model
 import Smokehill.URL
 
 import Paths_smokehill
+
+
+getLibDir :: Smokehill FilePath
+getLibDir = runIO $ getIdrisLibDir
 
 searchPackages :: String -> Smokehill (Maybe PkgDesc)
 searchPackages str = do
@@ -26,11 +32,20 @@ searchPackages str = do
 
 loadLibrary :: IO [PkgDesc]
 loadLibrary = do
+    pdir <- getPackageDBIO
+    ps   <- listDirectory pdir
+    let ps'  = filter (correctExt) ps
+    let ps'' = map (pdir </>) ps'
+    mapM getPkgDesc ps''
+
+getPackageDBIO :: IO FilePath
+getPackageDBIO = do
   ddir <- getDataDir
-  ps <- listDirectory $ ddir </> "packagedb"
-  let ps' = filter (\x -> takeExtension x == ".ipkg") ps
-  ps'' <- mapM (\x -> makeAbsolute (ddir </> "packagedb" </> x)) ps'
-  mapM getPkgDesc ps''
+  pdir <- makeAbsolute (ddir </> "packagedb")
+  pure pdir
+
+getPackageDB :: Smokehill FilePath
+getPackageDB = runIO $ getPackageDBIO
 
 getCacheDirectory :: Smokehill FilePath
 getCacheDirectory = do
@@ -72,3 +87,6 @@ pkgSearch x ipkg = (lowerName x) `isInfixOf` (lowerName $ pkgname ipkg)
   where
     lowerName :: String -> String
     lowerName = map toLower
+
+correctExt :: String -> Bool
+correctExt s = takeExtension s == ".ipkg"

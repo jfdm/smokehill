@@ -19,6 +19,10 @@ optParser = subparser (
   <> (command "cleanup"
       (info cmdCleanup
             (progDesc "Clean the cache.")))
+  <> (command "paths"
+      (info cmdPaths
+            (progDesc "Show Idris & Smokehill Paths.")))
+
   )
     where
       cmdInstalled :: Parser Command
@@ -38,6 +42,9 @@ optParser = subparser (
       cmdCleanup :: Parser Command
       cmdCleanup = CMDCleanup <$> switch (long "force" <> help "Perform cleanup of cache")
 
+      cmdPaths :: Parser Command
+      cmdPaths = pure CMDPaths
+
 
 getOpMode :: IO Command
 getOpMode = execParser opts
@@ -54,3 +61,4 @@ data Command = CMDInstalled            -- ^ List installed packages
              | CMDShow   String        -- ^ Show package info
              | CMDInstall String Bool  -- ^ Try to install package, bool dry run.
              | CMDCleanup Bool         -- ^ Clean cache, bool to do clean
+             | CMDPaths                -- ^ Show paths

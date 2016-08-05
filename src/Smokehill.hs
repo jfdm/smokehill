@@ -43,3 +43,4 @@ parseCmd (CMDSearch  pkg  ) = searchForPackage pkg
 parseCmd (CMDShow    pkg  ) = showPackage pkg
 parseCmd (CMDInstall pkg b) = installPackage pkg b
 parseCmd (CMDCleanup b    ) = cleanCache b
+parseCmd (CMDPaths)         = showPaths
