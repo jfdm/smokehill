@@ -1,0 +1,33 @@
+package config
+
+author     = Jan de Muijnck-Hughes
+maintainer = Jan de Muijnck-Hughes
+license    = BSD3 but see LICENSE for more information
+brief      = "Simple config file parser"
+readme     = README.md
+version    = 0.1
+sourceloc  = git://git@github.com:jfdm/idris-config.git
+bugtracker = http://www.github.com/jfdm/idris-config/issues
+
+pkgs = containers
+     , effects
+     , lightyear
+     , test
+     , testparse
+
+modules = Config.Parse.Utils
+        , Config.Parse.Common
+        , Config.Error
+
+        , Config.INI
+        , Config.Properties
+        , Config.JSON
+        , Config.YAML
+
+        , Config.Test.JSON
+        , Config.Test.YAML
+        , Config.Test.INI
+
+tests = Config.Test.JSON.runTests
+      , Config.Test.YAML.runTests
+      , Config.Test.INI.runTests

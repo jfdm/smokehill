@@ -1,0 +1,24 @@
+package read
+
+author     = Jan de Muijnck-Hughes
+maintainer = Jan de Muijnck-Hughes
+license    = BSD3 but see LICENSE for more information
+brief      = "Readability metrics"
+readme     = README.md
+version    = 0.1
+sourceloc  = git://git@github.com:jfdm/idris-read.git
+bugtracker = http://www.github.com/jfdm/idris-read/issues
+
+pkgs = effects
+     , edda
+     , xml
+
+modules = Readability.Metrics
+        , Readability.Stats
+        , Readability.WordTypes
+        , Readability
+
+        , Readability.Process.Effs
+        , Readability.Process.Common
+        , Readability.Process.Edda
+        , Readability.Process.XML
