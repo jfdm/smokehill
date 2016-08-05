@@ -37,9 +37,9 @@ theMain cmd libs = do
   parseCmd cmd
 
 parseCmd :: Command -> Smokehill ()
-parseCmd (CMDInstalled    ) = listInstalled
-parseCmd (CMDSearch  pkg  ) = searchForPackage pkg
-parseCmd (CMDShow    pkg  ) = showPackage pkg
-parseCmd (CMDInstall pkg b) = installPackage pkg b
-parseCmd (CMDCleanup b    ) = cleanCache b
-parseCmd (CMDPaths)         = showPaths
+parseCmd (CMDInstalled)       = listInstalled
+parseCmd (CMDSearch  pkg)     = searchForPackage pkg
+parseCmd (CMDShow    pkg)     = showPackage pkg
+parseCmd (CMDInstall pkg d f) = installPackage pkg d f
+parseCmd (CMDCleanup b)       = cleanCache b
+parseCmd (CMDPaths)           = showPaths

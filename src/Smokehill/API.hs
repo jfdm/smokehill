@@ -1,4 +1,12 @@
-module Smokehill.API where
+module Smokehill.API
+  (
+    showPaths
+  , cleanCache
+  , searchForPackage
+  , showPackage
+  , listInstalled
+  , installPackage
+  ) where
 
 import Control.Monad
 
@@ -62,55 +70,63 @@ listInstalled = do
   pkgs <- runIO installedPackages
   mapM_ sPutStrLn pkgs
 
-installPackage :: String -> Bool -> Smokehill()
-installPackage pkg dryrun = do
+installPackage :: String -> Bool -> Bool -> Smokehill()
+installPackage pkg dryrun force = do
   res <- searchPackages pkg
   case res of
     Nothing    -> sPutStrLn "Package doesn't exist in repo."
     Just ipkg  -> do
+
       ps <- runIO $ installedPackages
-      case find (\x -> (pkgname ipkg) == x) ps of
-        Just _  -> sPutStrLn "Package already installed."
-        Nothing -> do
+
+      let there = find ((pkgname ipkg) ==) ps
+
+      if (isJust there) && (not force)
+        then sPutStrLn "Package already installed."
+        else do
           sPutWordsLn ["Installing", pkgname ipkg]
+          sPutWordsLn ["Determining Dependencies"]
           ds <- getInstallOrder ipkg
           case ds of
-            [] -> doInstallPackage ipkg dryrun
+            [ipkg] -> do
+                sPutStrLn "No dependencies"
+                performInstall ipkg dryrun
             is -> do
-                sPutWordsLn ["Installing Packages"]
                 let ds' = filter (\x -> not $ (pkgname x) `elem` ps) ds
-                mapM_ (\x -> doInstallPackage x dryrun) ds'
+                let ds'' = if force then ds else ds'
 
-doInstallPackage :: PkgDesc -> Bool -> Smokehill ()
-doInstallPackage ipkg dryrun = do
-  sPutWordsLn ["Attempting to install:", pkgname ipkg]
-  cdir <- getCacheDirectory
-  pkg' <- runIO $ makeAbsolute (cdir </> (pkgname ipkg))
-  d    <- runIO $ doesDirectoryExist pkg'
-  let pfile = pkg' </> (pkgname ipkg) -<.> "ipkg"
-  case (pkgsourceloc ipkg) of
-    Nothing   -> sPutWordsLn ["Source Location not specified"]
-    Just sloc -> do
-      case whichDVCS sloc of
-        Nothing   -> sPutWordsLn ["Package is not a valid DVCS url",  sloc]
-        Just dvcs -> do
-          if d
-            then do
-              sPutWordsLn ["Directory already exists, checking for updates."]
-              errno <- runIO $ dvcsUpdate dvcs pkg'
-              case errno of
-                ExitFailure _     -> runIO $ exitWith errno
-                ExitSuccess       -> do
-                  sPutWordsLn ["Attempting to install using:", pfile]
-                  when (not dryrun) $ runIO $ buildPkg [] True (True, pfile)
-            else do
-              sPutWordsLn ["Directory doesn't exists, cloning."]
-              sPutWordsLn ["Cloning Git Repo"]
-              when (not dryrun) $ do
-                errno <- runIO $ dvcsClone dvcs cdir (pkgname ipkg)
-                case errno of
-                  ExitFailure _     -> runIO $ exitWith errno
-                  ExitSuccess       -> do
-                    sPutWordsLn ["Attempting to install using:", pfile]
-                    runIO $ withCurrentDirectory pkg' $ do
-                      when (not dryrun) $ buildPkg [] True (True, pfile)
+                sPutWordsLn $ ["Installing Packages:"] ++ map pkgname ds''
+                mapM_ (\x -> performInstall x dryrun) ds''
+
+performInstall :: PkgDesc -> Bool -> Smokehill ()
+performInstall ipkg dryrun = do
+    sPutWordsLn ["Attempting to install:", pkgname ipkg]
+    cdir <- getCacheDirectory
+    pdir <- runIO $ makeAbsolute (cdir </> (pkgname ipkg))
+    d    <- runIO $ doesDirectoryExist pdir
+    case (pkgsourceloc ipkg) of
+      Nothing   -> sPutWordsLn ["Source Location not specified"]
+      Just sloc -> do
+        case whichDVCS sloc of
+          Nothing   -> sPutWordsLn ["Package is not a valid DVCS url",  sloc]
+          Just dvcs -> do
+            if d
+              then do
+                sPutWordsLn ["Directory already exists, checking for updates."]
+                when (not dryrun) $ do
+                  errno <- runIO $ dvcsUpdate dvcs pdir
+                  doInstall errno pdir ipkg
+              else do
+                sPutWordsLn ["Directory doesn't exists, cloning."]
+                sPutWordsLn ["Cloning Git Repo"]
+                when (not dryrun) $ do
+                  errno <- runIO $ dvcsClone dvcs cdir (pkgname ipkg)
+                  doInstall errno pdir ipkg
+  where
+    doInstall :: ExitCode -> FilePath -> PkgDesc -> Smokehill ()
+    doInstall err@(ExitFailure _) _    _    = runIO $ exitWith err
+    doInstall ExitSuccess         pdir ipkg = do
+      let pfile = pdir </> (pkgname ipkg) -<.> "ipkg"
+      sPutWordsLn ["Attempting to install using:", pfile]
+      runIO $ withCurrentDirectory pdir $ do
+        when (not dryrun) $ buildPkg [] True (True, pfile)
