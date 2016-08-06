@@ -2,8 +2,19 @@ module Smokehill.Options where
 
 import Options.Applicative
 
-optParser :: Parser Command
-optParser = subparser (
+optParser :: Parser Option
+optParser = Option
+    <$> globalOptParser
+    <*> cmdParser
+
+
+globalOptParser :: Parser (Maybe FilePath)
+globalOptParser = optional $ strOption (long "custom-idris"
+               <> metavar "EXE"
+               <> help "Custom Idris executable to use." )
+
+cmdParser  :: Parser Command
+cmdParser = subparser (
      (command "list"
       (info cmdInstalled
             (progDesc "List installed packages.")))
@@ -47,7 +58,7 @@ optParser = subparser (
       cmdPaths = pure CMDPaths
 
 
-getOpMode :: IO Command
+getOpMode :: IO Option
 getOpMode = execParser opts
   where
     opts = info (helper <*> optParser)
@@ -56,6 +67,7 @@ getOpMode = execParser opts
                    <> header "smokehill")
 
 
+data Option = Option (Maybe FilePath) Command
 
 data Command = CMDInstalled                -- ^ List installed packages
              | CMDSearch String            -- ^ Search for package
