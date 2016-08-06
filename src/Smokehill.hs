@@ -1,6 +1,6 @@
 module Smokehill
   (
-  mainSmokehill
+  smokehillMain
   ) where
 
 import Control.Monad
@@ -24,17 +24,19 @@ import Smokehill.Utils
 
 import Utils
 
-mainSmokehill :: IO ()
-mainSmokehill = do
-  os  <- getOpMode
-  lib <- loadLibrary
-  runMain (theMain os lib)
-  exitSuccess
+smokehillMain :: IO ()
+smokehillMain = runMain $ do
+  os   <- runIO $ getOpMode
+  lib  <- runIO $ loadLibrary
+  iexe <- runIO $ getSystemIdrisIO
 
-theMain :: Command -> [PkgDesc] -> Smokehill ()
-theMain cmd libs = do
-  setLibrary libs
-  parseCmd cmd
+  setLibrary lib
+  setIdrisExe iexe
+
+  parseCmd os
+
+  runIO $ exitSuccess
+
 
 parseCmd :: Command -> Smokehill ()
 parseCmd (CMDInstalled)       = listInstalled

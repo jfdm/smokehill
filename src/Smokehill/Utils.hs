@@ -19,6 +19,16 @@ import Smokehill.Model
 
 import Paths_smokehill
 
+getSystemIdrisIO :: IO FilePath
+getSystemIdrisIO = do
+  exe <- findExecutable "idris"
+  case exe of
+    Nothing -> do
+      putStrLn "Idris not installed on PATH."
+      exitFailure
+    Just exeloc -> do
+      pure exeloc
+
 
 getLibDir :: Smokehill FilePath
 getLibDir = runIO $ getIdrisLibDir

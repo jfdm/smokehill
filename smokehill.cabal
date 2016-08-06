@@ -28,6 +28,7 @@ executable smokehill
                      , Smokehill.Model
                      , Smokehill.DVCS
                      , Smokehill.API
+                     , Smokehill.Idris
                      , Utils
 
   default-language:    Haskell2010

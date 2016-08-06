@@ -11,6 +11,8 @@ import System.IO.Error(isUserError, ioeGetErrorString, tryIOError)
 
 import Idris.Package.Common
 
+import Utils
+
 --  ------------------------------------------------ [ Smokehill Program Model ]
 
 type Smokehill = StateT SState (ExceptT SError IO)
@@ -29,11 +31,12 @@ runMain prog = do
 
 data SState = SState
   {
-   library :: [PkgDesc]
+    library :: [PkgDesc]
+  , iexe    :: FilePath
   } deriving (Show)
 
 initState :: SState
-initState = SState []
+initState = SState [] ""
 
 getState :: Smokehill SState
 getState = get
@@ -57,6 +60,16 @@ getLibrary :: Smokehill [PkgDesc]
 getLibrary = do
   st <- getState
   return (library st)
+
+setIdrisExe :: FilePath -> Smokehill ()
+setIdrisExe fp = do
+  st <- getState
+  put (st {iexe = fp})
+
+getIdrisExe :: Smokehill FilePath
+getIdrisExe = do
+  st <- getState
+  return (iexe st)
 
 --  -------------------------------------------------------------- [ Error API ]
 

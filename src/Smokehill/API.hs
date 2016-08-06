@@ -19,8 +19,6 @@ import System.Exit
 import Data.List
 import Data.Maybe
 
-import Idris.Imports (installedPackages)
-
 import Idris.Package.Common
 import Idris.Package
 
@@ -28,18 +26,20 @@ import Smokehill.Model
 import Smokehill.DVCS
 import Smokehill.Dependency
 import Smokehill.Utils
-
+import Smokehill.Idris
 
 showPaths :: Smokehill ()
 showPaths = do
   cdir <- getCacheDirectory
   pdir <- getPackageDB
-  ldir <- getLibDir
+  ldir <- idrisLibDir
+  iexe <- idrisExe
 
   sPutStrLn "Smokehill Paths"
   sPutWordsLn ["--> Cache Directory:", cdir]
   sPutWordsLn ["--> iPKG Database:", pdir]
   sPutStrLn "Idris Paths"
+  sPutWordsLn ["--> Idris Exe:", iexe]
   sPutWordsLn ["--> Library Directory:", ldir]
 
 cleanCache :: Bool -> Smokehill ()
@@ -67,7 +67,7 @@ showPackage pkg = do
 
 listInstalled :: Smokehill ()
 listInstalled = do
-  pkgs <- runIO installedPackages
+  pkgs <- idrisPkgs
   mapM_ sPutStrLn pkgs
 
 installPackage :: String -> Bool -> Bool -> Smokehill()
@@ -77,7 +77,7 @@ installPackage pkg dryrun force = do
     Nothing    -> sPutStrLn "Package doesn't exist in repo."
     Just ipkg  -> do
 
-      ps <- runIO $ installedPackages
+      ps <- idrisPkgs
 
       let there = find ((pkgname ipkg) ==) ps
 
@@ -128,5 +128,5 @@ performInstall ipkg dryrun = do
     doInstall ExitSuccess         pdir ipkg = do
       let pfile = pdir </> (pkgname ipkg) -<.> "ipkg"
       sPutWordsLn ["Attempting to install using:", pfile]
-      runIO $ withCurrentDirectory pdir $ do
-        when (not dryrun) $ buildPkg [] True (True, pfile)
+      when (not dryrun) $ do
+        idrisInstall pdir pfile
