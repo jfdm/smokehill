@@ -37,7 +37,8 @@ executable smokehill
                      , optparse-applicative >= 0.11 && < 0.13
                      , directory >= 1.2.3.0
                      , filepath
-                     , process
+                     , process >= 1.2.3.0
                      , containers
                      , url
                      , transformers
+  ghc-options: -threaded

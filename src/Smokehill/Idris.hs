@@ -22,7 +22,6 @@ import Utils
 doIdris :: String -> List String -> IO (ExitCode, String, String)
 doIdris exe args = do
   let iproc = proc exe args
-  putStrLn $ unwords ([exe] ++ args)
   readCreateProcessWithExitCode iproc []
 
 idrisInstall :: FilePath
