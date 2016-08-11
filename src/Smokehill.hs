@@ -14,13 +14,12 @@ import System.Process
 import Data.List
 import Data.Maybe
 
-import Idris.Package.Common
-
 import Smokehill.Model
 import Smokehill.Options
 import Smokehill.API
 import Smokehill.Dependency
 import Smokehill.Utils
+import Smokehill.PackageDesc
 
 import Utils
 

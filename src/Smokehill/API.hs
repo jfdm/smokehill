@@ -19,9 +19,7 @@ import System.Exit
 import Data.List
 import Data.Maybe
 
-import Idris.Package.Common
-import Idris.Package
-
+import Smokehill.PackageDesc
 import Smokehill.Model
 import Smokehill.DVCS
 import Smokehill.Dependency
@@ -63,7 +61,7 @@ showPackage pkg = do
   res <- searchPackages pkg
   case res of
     Nothing  -> sPutWordsLn ["Package not found", pkg]
-    Just pkg -> printPrettyPkgDesc pkg
+    Just pkg -> printPrettyPackageDesc pkg
 
 listInstalled :: Smokehill ()
 listInstalled = do
@@ -98,7 +96,7 @@ installPackage pkg dryrun force = do
                 sPutWordsLn $ ["Installing Packages:"] ++ map pkgname ds''
                 mapM_ (\x -> performInstall x dryrun) ds''
 
-performInstall :: PkgDesc -> Bool -> Smokehill ()
+performInstall :: PackageDesc -> Bool -> Smokehill ()
 performInstall ipkg dryrun = do
     sPutWordsLn ["Attempting to install:", pkgname ipkg]
     cdir <- getCacheDirectory
@@ -123,7 +121,7 @@ performInstall ipkg dryrun = do
                   errno <- runIO $ dvcsClone dvcs cdir (pkgname ipkg)
                   doInstall errno pdir ipkg
   where
-    doInstall :: ExitCode -> FilePath -> PkgDesc -> Smokehill ()
+    doInstall :: ExitCode -> FilePath -> PackageDesc -> Smokehill ()
     doInstall err@(ExitFailure _) _    _    = runIO $ exitWith err
     doInstall ExitSuccess         pdir ipkg = do
       let pfile = pdir </> (pkgname ipkg) -<.> "ipkg"

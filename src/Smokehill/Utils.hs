@@ -10,14 +10,17 @@ import Data.List
 import Data.Maybe
 import Data.Char
 
-import IRTS.System (getIdrisLibDir)
-
-import Idris.Package
-import Idris.Package.Common
-
 import Smokehill.Model
+import Smokehill.PackageDesc
+import Smokehill.PackageDesc.Parser
+import Smokehill.Idris
+
+import Data.Version
 
 import Paths_smokehill
+
+
+getSmokehillVersion = showVersion version 
 
 getSystemIdrisIO :: IO FilePath
 getSystemIdrisIO = do
@@ -29,23 +32,19 @@ getSystemIdrisIO = do
     Just exeloc -> do
       pure exeloc
 
-
-getLibDir :: Smokehill FilePath
-getLibDir = runIO $ getIdrisLibDir
-
-searchPackages :: String -> Smokehill (Maybe PkgDesc)
+searchPackages :: String -> Smokehill (Maybe PackageDesc)
 searchPackages str = do
   libs <- getLibrary
   let res = find (\pkg -> str == pkgname pkg) libs
   pure res
 
-loadLibrary :: IO [PkgDesc]
+loadLibrary :: IO [PackageDesc]
 loadLibrary = do
     pdir <- getPackageDBIO
     ps   <- listDirectory pdir
     let ps'  = filter (correctExt) ps
     let ps'' = map (pdir </>) ps'
-    mapM getPkgDesc ps''
+    mapM parsePkgDescFile ps''
 
 getPackageDBIO :: IO FilePath
 getPackageDBIO = do
@@ -62,8 +61,8 @@ getCacheDirectory = do
   runIO $ createDirectoryIfMissing True cdir
   pure cdir
 
-printPrettyPkgDesc :: PkgDesc -> Smokehill ()
-printPrettyPkgDesc ipkg = do
+printPrettyPackageDesc :: PackageDesc -> Smokehill ()
+printPrettyPackageDesc ipkg = do
     sPutWordsLn ["Name:\t",    pkgname ipkg]
     sPutWordsLn ["Version:\t", fromMaybe "Not Provided" $ pkgversion ipkg]
     sPutWordsLn ["Brief:\t",   fromMaybe "Not Provided" $ pkgbrief ipkg]
@@ -71,7 +70,7 @@ printPrettyPkgDesc ipkg = do
     sPutWordsLn ["DCVS:\t",    fromMaybe "Not Provided" $ pkgsourceloc ipkg]
     sPutWordsLn ["Deps:\t",    show (pkgdeps ipkg)]
 
-pkgSearch :: String -> PkgDesc -> Bool
+pkgSearch :: String -> PackageDesc -> Bool
 pkgSearch x ipkg = (lowerName x) `isInfixOf` (lowerName $ pkgname ipkg)
   where
     lowerName :: String -> String

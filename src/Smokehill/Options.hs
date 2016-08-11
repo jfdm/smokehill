@@ -2,6 +2,8 @@ module Smokehill.Options where
 
 import Options.Applicative
 
+import Smokehill.Utils (getSmokehillVersion)
+
 optParser :: Parser Option
 optParser = Option
     <$> globalOptParser
@@ -57,11 +59,15 @@ cmdParser = subparser (
       cmdPaths :: Parser Command
       cmdPaths = pure CMDPaths
 
+versionFlag = infoOption getSmokehillVersion
+                (short 'v'
+                <> long "version"
+                <> help "Print version information.")
 
 getOpMode :: IO Option
 getOpMode = execParser opts
   where
-    opts = info (helper <*> optParser)
+    opts = info (versionFlag <*> helper <*> optParser)
                 (fullDesc
                    <> progDesc "A simple package manager for Idris."
                    <> header "smokehill")

@@ -9,8 +9,7 @@ import qualified Control.Monad.Trans.Class as Trans (lift)
 import System.IO
 import System.IO.Error(isUserError, ioeGetErrorString, tryIOError)
 
-import Idris.Package.Common
-
+import Smokehill.PackageDesc
 import Utils
 
 --  ------------------------------------------------ [ Smokehill Program Model ]
@@ -31,7 +30,7 @@ runMain prog = do
 
 data SState = SState
   {
-    library :: [PkgDesc]
+    library :: [PackageDesc]
   , iexe    :: FilePath
   } deriving (Show)
 
@@ -51,12 +50,12 @@ updateState u = do
 
 --  ---------------------------------------------------------------- [ Lib API ]
 
-setLibrary :: [PkgDesc] -> Smokehill ()
+setLibrary :: [PackageDesc] -> Smokehill ()
 setLibrary ls = do
   st <- getState
   put (st {library = ls})
 
-getLibrary :: Smokehill [PkgDesc]
+getLibrary :: Smokehill [PackageDesc]
 getLibrary = do
   st <- getState
   return (library st)
