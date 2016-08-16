@@ -42,9 +42,14 @@ loadLibrary :: IO [PackageDesc]
 loadLibrary = do
     pdir <- getPackageDBIO
     ps   <- listDirectory pdir
-    let ps'  = filter (correctExt) ps
-    let ps'' = map (pdir </>) ps'
-    mapM parsePkgDescFile ps''
+    case filter (correctExt) ps of
+      [] -> do
+        putStrLn "Package DB is empty, please update package index using command:"
+        putStrLn "\tsmokehill update"
+        exitSuccess
+      ps' -> do
+        let ps'' = map (pdir </>) ps'
+        mapM parsePkgDescFile ps''
 
 getPackageDBIO :: IO FilePath
 getPackageDBIO = do

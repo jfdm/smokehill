@@ -35,6 +35,12 @@ cmdParser = subparser (
   <> (command "paths"
       (info cmdPaths
             (progDesc "Show Idris & Smokehill Paths.")))
+  <> (command "update"
+      (info cmdUpdate
+            (progDesc "Update package index")))
+  <> (command "audit"
+      (info cmdAudit
+            (progDesc "Check if iPKG file is valid.")))  
 
   )
     where
@@ -59,6 +65,13 @@ cmdParser = subparser (
       cmdPaths :: Parser Command
       cmdPaths = pure CMDPaths
 
+      cmdUpdate :: Parser Command
+      cmdUpdate = pure CMDUpdate
+
+      cmdAudit :: Parser Command
+      cmdAudit = CMDAudit
+          <$> argument str (metavar "PKG")
+          
 versionFlag = infoOption getSmokehillVersion
                 (short 'v'
                 <> long "version"
@@ -81,3 +94,5 @@ data Command = CMDInstalled                -- ^ List installed packages
              | CMDInstall String Bool Bool -- ^ Try to install package, bool dry run.
              | CMDCleanup Bool             -- ^ Clean cache, bool to do clean
              | CMDPaths                    -- ^ Show paths
+             | CMDAudit String             -- ^ Audit a ipkg file.
+             | CMDUpdate                   -- ^ Update ipkg files.

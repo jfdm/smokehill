@@ -6,6 +6,8 @@ module Smokehill.API
   , showPackage
   , listInstalled
   , installPackage
+  , updatePackageIndex
+  , auditPackage
   ) where
 
 import Control.Monad
@@ -25,6 +27,15 @@ import Smokehill.DVCS
 import Smokehill.Dependency
 import Smokehill.Utils
 import Smokehill.Idris
+
+
+updatePackageIndex :: Smokehill ()
+updatePackageIndex = do
+  sPutStrLn $ unwords ["Feature not implemented."]
+  
+auditPackage :: String -> Smokehill ()
+auditPackage fp = do
+  sPutStrLn $ unwords ["Feature not implemented."]
 
 showPaths :: Smokehill ()
 showPaths = do

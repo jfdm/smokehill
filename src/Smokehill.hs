@@ -41,5 +41,6 @@ smokehillMain = runMain $ do
     (CMDInstall pkg d f) -> installPackage pkg d f
     (CMDCleanup b)       -> cleanCache b
     (CMDPaths)           -> showPaths
-
+    (CMDAudit   pkg)     -> auditPackage pkg
+    (CMDUpdate)          -> updatePackageIndex
   runIO $ exitSuccess
