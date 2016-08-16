@@ -27,15 +27,14 @@ import Smokehill.DVCS
 import Smokehill.Dependency
 import Smokehill.Utils
 import Smokehill.Idris
-
+import Smokehill.Audit
 
 updatePackageIndex :: Smokehill ()
 updatePackageIndex = do
   sPutStrLn $ unwords ["Feature not implemented."]
-  
+
 auditPackage :: String -> Smokehill ()
-auditPackage fp = do
-  sPutStrLn $ unwords ["Feature not implemented."]
+auditPackage = auditPackageDesc
 
 showPaths :: Smokehill ()
 showPaths = do
