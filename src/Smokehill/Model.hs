@@ -10,6 +10,7 @@ import System.IO
 import System.IO.Error(isUserError, ioeGetErrorString, tryIOError)
 
 import Smokehill.PackageDesc
+import Smokehill.DVCS
 import Utils
 
 --  ------------------------------------------------ [ Smokehill Program Model ]
@@ -32,10 +33,11 @@ data SState = SState
   {
     library :: [PackageDesc]
   , iexe    :: FilePath
+  , dbloc   :: DVCS
   } deriving (Show)
 
 initState :: SState
-initState = SState [] ""
+initState = SState [] "" (newGitRepo "https://www.github.com/jfdm/chipshop.git")
 
 getState :: Smokehill SState
 getState = get
@@ -47,6 +49,7 @@ updateState :: (SState -> SState) -> Smokehill ()
 updateState u = do
   s <- getState
   putState (u s)
+
 
 --  ---------------------------------------------------------------- [ Lib API ]
 
@@ -69,6 +72,16 @@ getIdrisExe :: Smokehill FilePath
 getIdrisExe = do
   st <- getState
   return (iexe st)
+
+setPackageRepo :: DVCS -> Smokehill ()
+setPackageRepo fp = do
+  st <- getState
+  put (st {dbloc = fp})
+
+getPackageRepo :: Smokehill DVCS
+getPackageRepo = do
+  st <- getState
+  return (dbloc st)
 
 --  -------------------------------------------------------------- [ Error API ]
 

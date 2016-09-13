@@ -20,6 +20,7 @@ import Smokehill.API
 import Smokehill.Dependency
 import Smokehill.Utils
 import Smokehill.PackageDesc
+import Smokehill.Settings
 
 import Utils
 
@@ -27,12 +28,19 @@ smokehillMain :: IO ()
 smokehillMain = runMain $ do
   (Option usr_iexe cmd) <- runIO $ getOpMode
 
-  lib  <- runIO $ loadLibrary
-  iexe <- runIO $ getSystemIdrisIO
+  settings <- getSettings
 
-  setLibrary lib
+  lib  <- runIO $ loadLibrary
+  case lib of
+    [] -> do
+      updatePackageIndex
+      runIO $ exitSuccess
+    lib' -> setLibrary lib
+
+  let iexe = idris_path settings
 
   setIdrisExe $ fromMaybe iexe usr_iexe
+  setPackageRepo (ipkg_repo settings)
 
   case cmd of
     (CMDInstalled)       -> listInstalled

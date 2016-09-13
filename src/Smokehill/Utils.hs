@@ -10,17 +10,65 @@ import Data.List
 import Data.Maybe
 import Data.Char
 
+import qualified Data.Yaml as Y
+
 import Smokehill.Model
 import Smokehill.PackageDesc
 import Smokehill.PackageDesc.Parser
 import Smokehill.Idris
-
+import Smokehill.Settings
 import Data.Version
 
 import Paths_smokehill
 
+getSettingsLocationIO :: IO FilePath
+getSettingsLocationIO = do
+  ddir <- getSmokehillConfigDirIO
+  sp <- makeAbsolute (ddir </> "settings.yaml")
+  pure sp
 
-getSmokehillVersion = showVersion version 
+getSettingsLocation :: Smokehill FilePath
+getSettingsLocation = runIO $ getSettingsLocationIO
+
+getSettings :: Smokehill SSettings
+getSettings = do
+  defSettings <- mkDefaultSettings
+  runIO $ (getSettingsIO defSettings)
+
+getSettingsIO :: SSettings -> IO SSettings
+getSettingsIO defSet = do
+  sp <- getSettingsLocationIO
+  exists <- (doesFileExist sp)
+  if not exists
+    then do
+      putStrLn "settings.yaml doesn't exist."
+      putStrLn "Writing default settings"
+      settingsToFile defSet
+      pure defSet
+    else do
+      sp' <- settingsFromFile sp
+      case  sp' of
+           Nothing -> do
+             putStrLn "settings.yaml is corrupted."
+             putStrLn "Writing default settings."
+             settingsToFile defSet
+             pure defSet
+           Just s -> pure s
+
+
+mkDefaultSettings :: Smokehill SSettings
+mkDefaultSettings = do
+  iexe <- runIO $ getSystemIdrisIO
+  repo <- getPackageRepo
+  pure $ SSettings repo iexe
+
+
+settingsToFile :: SSettings -> IO ()
+settingsToFile s = do
+    sp <- getSettingsLocationIO
+    Y.encodeFile sp s
+
+getSmokehillVersion = showVersion version
 
 getSystemIdrisIO :: IO FilePath
 getSystemIdrisIO = do
@@ -41,30 +89,49 @@ searchPackages str = do
 loadLibrary :: IO [PackageDesc]
 loadLibrary = do
     pdir <- getPackageDBIO
+
     ps   <- listDirectory pdir
     case filter (correctExt) ps of
       [] -> do
-        putStrLn "Package DB is empty, please update package index using command:"
-        putStrLn "\tsmokehill update"
-        exitSuccess
+        putStrLn "Package DB is empty."
+        pure []
       ps' -> do
         let ps'' = map (pdir </>) ps'
         mapM parsePkgDescFile ps''
 
 getPackageDBIO :: IO FilePath
 getPackageDBIO = do
-  ddir <- getDataDir
+  ddir <- getSmokehillDataDirIO
   pdir <- makeAbsolute (ddir </> "packagedb")
+  createDirectoryIfMissing True pdir
   pure pdir
 
 getPackageDB :: Smokehill FilePath
 getPackageDB = runIO $ getPackageDBIO
 
-getCacheDirectory :: Smokehill FilePath
-getCacheDirectory = do
+getSmokehillDataDirIO :: IO FilePath
+getSmokehillDataDirIO = do
+  ddir <- getXdgDirectory XdgData "smokehill"
+  createDirectoryIfMissing True ddir
+  pure ddir
+
+getSmokehillDataDir :: Smokehill FilePath
+getSmokehillDataDir = runIO $ getSmokehillDataDirIO
+
+getSmokehillCacheDir :: Smokehill FilePath
+getSmokehillCacheDir = do
   cdir <- runIO $ getXdgDirectory XdgCache "smokehill"
   runIO $ createDirectoryIfMissing True cdir
   pure cdir
+
+getSmokehillConfigDirIO :: IO FilePath
+getSmokehillConfigDirIO = do
+  ddir <- getXdgDirectory XdgConfig "smokehill"
+  createDirectoryIfMissing True ddir
+  pure ddir
+
+getSmokehillConfigDir :: Smokehill FilePath
+getSmokehillConfigDir = runIO $ getSmokehillConfigDirIO
 
 printPrettyPackageDesc :: PackageDesc -> Smokehill ()
 printPrettyPackageDesc ipkg = do

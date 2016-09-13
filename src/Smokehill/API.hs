@@ -28,32 +28,53 @@ import Smokehill.Dependency
 import Smokehill.Utils
 import Smokehill.Idris
 import Smokehill.Audit
+import Smokehill.Settings
 
 updatePackageIndex :: Smokehill ()
 updatePackageIndex = do
-  sPutStrLn $ unwords ["Feature not implemented."]
+  pdir <- getPackageDB
+  repo <- getPackageRepo
+
+  errno <- runIO $ dvcsUpdate repo pdir
+  case errno of
+    err@(ExitFailure _) -> do
+      ddir <- getSmokehillDataDir
+      errno' <- runIO $ dvcsClone repo ddir "packagedb"
+      case errno' of
+        err@(ExitFailure _) -> runIO $ exitWith err
+        ExitSuccess         -> pure ()
+    ExitSuccess -> pure ()
 
 auditPackage :: String -> Smokehill ()
 auditPackage = auditPackageDesc
 
 showPaths :: Smokehill ()
 showPaths = do
-  cdir <- getCacheDirectory
+  cdir <- getSmokehillCacheDir
+  ddir <- getSmokehillDataDir
+  sdir <- getSmokehillConfigDir
+
   pdir <- getPackageDB
   ldir <- idrisLibDir
   iexe <- idrisExe
+  sfileloc <- getSettingsLocation
 
   sPutStrLn "Smokehill Paths"
   sPutWordsLn ["--> Cache Directory:", cdir]
+  sPutWordsLn ["--> Data Directory:", ddir]
+  sPutWordsLn ["--> Config Directory:", sdir]
+
   sPutWordsLn ["--> iPKG Database:", pdir]
+  sPutWordsLn ["--> Settings", sfileloc]
   sPutStrLn "Idris Paths"
   sPutWordsLn ["--> Idris Exe:", iexe]
   sPutWordsLn ["--> Library Directory:", ldir]
 
+
 cleanCache :: Bool -> Smokehill ()
 cleanCache forReal = do
   when (not forReal) $ sPutStrLn "To clean cache for real please use '--force'."
-  cdir <- getCacheDirectory
+  cdir <- getSmokehillCacheDir
   if forReal
     then runIO $ removeDirectoryRecursive cdir
     else sPutWordsLn ["If called, I would remove:", show cdir]
@@ -109,7 +130,7 @@ installPackage pkg dryrun force = do
 performInstall :: PackageDesc -> Bool -> Smokehill ()
 performInstall ipkg dryrun = do
     sPutWordsLn ["Attempting to install:", pkgname ipkg]
-    cdir <- getCacheDirectory
+    cdir <- getSmokehillCacheDir
     pdir <- runIO $ makeAbsolute (cdir </> (pkgname ipkg))
     d    <- runIO $ doesDirectoryExist pdir
     case (pkgsourceloc ipkg) of

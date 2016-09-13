@@ -1,9 +1,13 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module Smokehill.DVCS
   (
     DVCS()
   , whichDVCS
   , dvcsClone
   , dvcsUpdate
+  , newGitRepo
+  , newHGRepo
   ) where
 
 import System.Directory
@@ -11,13 +15,24 @@ import System.FilePath
 import System.IO
 import System.Process
 import System.Exit
+import Control.Applicative
 
+import Data.Text (Text)
+import qualified Data.Yaml as Y
+import Data.Yaml (FromJSON(..), (.:), ToJSON(..), (.=), object)
 import Data.List (isPrefixOf, stripPrefix)
 
 import Utils
 
 data DVCS = Git String
           | HG  String
+          deriving (Show)
+
+newGitRepo :: String -> DVCS
+newGitRepo = Git
+
+newHGRepo :: String -> DVCS
+newHGRepo = HG
 
 whichDVCS :: String -> Maybe DVCS
 whichDVCS url =
@@ -72,3 +87,14 @@ dvcsUpdate dvcs loc = do
     case dvcs of
       (Git _) -> doDVCS "git" ["pull"]
       (HG  _) -> doDVCS "hg"  ["pull", "-u"]
+
+
+instance FromJSON DVCS where
+  parseJSON (Y.Object v) =
+       newGitRepo <$> v .: "git"
+   <|> newHGRepo  <$> v .: "hg"
+  parseJSON _ = fail "Expected Object for DVCS option."
+
+instance ToJSON DVCS where
+    toJSON (Git u) = object ["git" .= u]
+    toJSON (HG  u) = object ["hg"  .= u]
