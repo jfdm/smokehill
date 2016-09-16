@@ -34,20 +34,33 @@ newGitRepo = Git
 newHGRepo :: String -> DVCS
 newHGRepo = HG
 
+-- Make more robust
 whichDVCS :: String -> Maybe DVCS
 whichDVCS url =
-  case stripGit url of
-    Just u  -> Just $ Git u
+  case stripHTTP url of
+    Just u -> Just $ Git u
     Nothing ->
-      case stripHG url of
-        Just u  -> Just $ HG u
-        Nothing -> Nothing
+      case stripHTTPS url of
+        Just u -> Just $ Git u
+        Nothing ->
+          case stripGit url of
+            Just u  -> Just $ Git u
+            Nothing ->
+              case stripHG url of
+                Just u  -> Just $ HG u
+                Nothing -> Nothing
 
 stripGit :: String -> Maybe String
 stripGit = stripPrefix "git://"
 
 stripHG :: String -> Maybe String
 stripHG = stripPrefix "hg://"
+
+stripHTTP :: String -> Maybe String
+stripHTTP = stripPrefix "http://"
+
+stripHTTPS :: String -> Maybe String
+stripHTTPS = stripPrefix "https://"
 
 
 doDVCS :: String -> List String -> IO ExitCode

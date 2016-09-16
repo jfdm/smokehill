@@ -8,6 +8,7 @@ module Smokehill.API
   , installPackage
   , updatePackageIndex
   , auditPackage
+  , convertPackageFile
   ) where
 
 import Control.Monad
@@ -16,7 +17,7 @@ import System.Directory
 import System.FilePath
 import System.IO
 import System.Process
-import System.Exit
+import System.Exit hiding (die)
 
 import Data.List
 import Data.Maybe
@@ -29,6 +30,22 @@ import Smokehill.Utils
 import Smokehill.Idris
 import Smokehill.Audit
 import Smokehill.Settings
+import Smokehill.PackageConfig
+import Smokehill.IPackage.Parser
+
+convertPackageFile :: FilePath
+                   -> Maybe FilePath
+                   -> Smokehill ()
+convertPackageFile fp ofile =
+  if (correctExtIPKG fp)
+    then do
+      ipkg <- parsePkgDescFile fp
+      cfg  <- convertFromIPkg ipkg
+      case ofile of
+        Nothing  -> displayConfig cfg
+        Just ofp -> configToFile ofp cfg
+    else die $ sPutStrLn "Not a valid file specified."
+
 
 updatePackageIndex :: Smokehill ()
 updatePackageIndex = do

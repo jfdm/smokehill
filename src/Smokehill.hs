@@ -51,4 +51,5 @@ smokehillMain = runMain $ do
     (CMDPaths)           -> showPaths
     (CMDAudit   pkg)     -> auditPackage pkg
     (CMDUpdate)          -> updatePackageIndex
+    (CMDConvert pkg f)   -> convertPackageFile pkg f
   runIO $ exitSuccess

@@ -91,13 +91,13 @@ loadLibrary = do
     pdir <- getPackageDBIO
 
     ps   <- listDirectory pdir
-    case filter (correctExt) ps of
+    case filter (correctExtIPKG) ps of
       [] -> do
         putStrLn "Package DB is empty."
         pure []
       ps' -> do
         let ps'' = map (pdir </>) ps'
-        mapM parsePkgDescFile ps''
+        mapM parsePkgDescFileIO ps''
 
 getPackageDBIO :: IO FilePath
 getPackageDBIO = do
@@ -148,5 +148,11 @@ pkgSearch x ipkg = (lowerName x) `isInfixOf` (lowerName $ pkgname ipkg)
     lowerName :: String -> String
     lowerName = map toLower
 
-correctExt :: String -> Bool
-correctExt s = takeExtension s == ".ipkg"
+correctExt :: String -> String -> Bool
+correctExt e s = takeExtension s == e
+
+correctExtIPKG :: String -> Bool
+correctExtIPKG = correctExt ".ipkg"
+
+correctExtYAML :: String -> Bool
+correctExtYAML = correctExt ".yaml"

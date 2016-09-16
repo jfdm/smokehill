@@ -29,6 +29,7 @@ executable smokehill
                      , Smokehill.IPackage
                      , Smokehill.IPackage.Parser
                      , Smokehill.Settings
+                     , Smokehill.PackageConfig
                      , Utils
 
   default-language:    Haskell2010
@@ -44,4 +45,5 @@ executable smokehill
                      , transformers
                      , mtl
                      , yaml
+                     , bytestring
   ghc-options: -threaded

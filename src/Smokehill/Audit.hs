@@ -14,7 +14,7 @@ import Smokehill.DVCS
 
 auditIPackage :: FilePath -> Smokehill ()
 auditIPackage fp = do
-  pkg <- runIO $ parsePkgDescFile fp
+  pkg <- parsePkgDescFile fp
 
   sPutWordsLn $ ["Loading of", fp, "successfull."]
 

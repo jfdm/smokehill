@@ -6,6 +6,7 @@ import Control.Monad.Trans.Except
 import Control.Monad.IO.Class
 import qualified Control.Monad.Trans.Class as Trans (lift)
 
+import System.Exit
 import System.IO
 import System.IO.Error(isUserError, ioeGetErrorString, tryIOError)
 
@@ -89,7 +90,10 @@ data SError = DVCSError    String
             | LibraryError String
             | PackageError String
             | RepoError    String
+            | ConfigParserError String
+            | ConvertError String
             | IOErr        IOError
+            | NotImplemented String
             deriving (Show)
 
 catchError :: Smokehill a -> (SError -> Smokehill a) -> Smokehill a
@@ -98,10 +102,33 @@ catchError = liftCatch catchE
 throwError :: SError -> Smokehill a
 throwError = Trans.lift . throwE
 
+failIO :: String -> IO a
+failIO s = do
+  putStrLn s
+  exitFailure
+
+die :: Smokehill () -> Smokehill a
+die a = do
+  a
+  runIO exitFailure
+
+die' :: IO () -> Smokehill a
+die' a = do
+  runIO a
+  runIO exitFailure
+
+dieIO :: IO () -> IO a
+dieIO a = do
+  a
+  exitFailure
+
 --  --------------------------------------------------------- [ IO Adjustments ]
 
 runIO :: IO a -> Smokehill a
 runIO x = liftIO (tryIOError x) >>= either (throwError . IOErr) return
+
+printLn :: Show a => a -> IO ()
+printLn = putStrLn . show
 
 sPrintLn :: Show a => a -> Smokehill ()
 sPrintLn = runIO . putStrLn . show

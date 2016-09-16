@@ -40,7 +40,10 @@ cmdParser = subparser (
             (progDesc "Update package index")))
   <> (command "audit"
       (info cmdAudit
-            (progDesc "Check if iPKG file is valid.")))  
+            (progDesc "Check if iPKG file is correct..")))
+  <> (command "convert"
+      (info cmdConvert
+            (progDesc "Generate an Yaml file for inclusion.")))
 
   )
     where
@@ -71,7 +74,15 @@ cmdParser = subparser (
       cmdAudit :: Parser Command
       cmdAudit = CMDAudit
           <$> argument str (metavar "PKG")
-          
+
+      cmdConvert :: Parser Command
+      cmdConvert = CMDConvert
+          <$> argument str (metavar "PKG")
+          <*> (optional $ strOption $
+                              long "output"
+                           <> short 'o'
+                           <> metavar "yaml")
+
 versionFlag = infoOption getSmokehillVersion
                 (short 'v'
                 <> long "version"
@@ -88,11 +99,12 @@ getOpMode = execParser opts
 
 data Option = Option (Maybe FilePath) Command
 
-data Command = CMDInstalled                -- ^ List installed packages
-             | CMDSearch String            -- ^ Search for package
-             | CMDShow   String            -- ^ Show package info
-             | CMDInstall String Bool Bool -- ^ Try to install package, bool dry run.
-             | CMDCleanup Bool             -- ^ Clean cache, bool to do clean
-             | CMDPaths                    -- ^ Show paths
-             | CMDAudit String             -- ^ Audit a ipkg file.
-             | CMDUpdate                   -- ^ Update ipkg files.
+data Command = CMDInstalled                       -- ^ List installed packages
+             | CMDSearch String                   -- ^ Search for package
+             | CMDShow   String                   -- ^ Show package info
+             | CMDInstall String Bool Bool        -- ^ Try to install package, bool dry run.
+             | CMDCleanup Bool                    -- ^ Clean cache, bool to do clean
+             | CMDPaths                           -- ^ Show paths
+             | CMDAudit String                    -- ^ Audit a ipkg file for use in conversion.
+             | CMDUpdate                          -- ^ Update ipkg files.
+             | CMDConvert String (Maybe FilePath) -- ^ Convert an ipkg file to yaml.

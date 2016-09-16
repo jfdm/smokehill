@@ -2,6 +2,7 @@ module Smokehill.IPackage.Parser
   (
     parsePkgDesc
   , parsePkgDescFile
+  , parsePkgDescFileIO
   ) where
 
 import System.Exit
@@ -41,9 +42,19 @@ parsePkgDesc fn str =
          Right
          (P.runParser (execStateT pkgDesc defaultPkg) fn str)
 
-
-parsePkgDescFile :: FilePath -> IO (IPackage)
+parsePkgDescFile :: FilePath -> Smokehill (IPackage)
 parsePkgDescFile fn = do
+  str <- runIO $ readFile fn
+
+  case parsePkgDesc fn str of
+    Left err -> die' $ do
+      putStrLn "Uncaught error: "
+      putStr err
+      exitFailure
+    Right x -> pure x
+
+parsePkgDescFileIO :: FilePath -> IO (IPackage)
+parsePkgDescFileIO fn = do
   str <- readFile fn
 
   case parsePkgDesc fn str of
