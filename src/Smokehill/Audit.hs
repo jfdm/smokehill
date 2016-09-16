@@ -1,25 +1,25 @@
 module Smokehill.Audit
   (
-    auditPackageDesc
+    auditIPackage
   ) where
 
 import Data.List
 
 import Smokehill.Model
-import Smokehill.PackageDesc
-import Smokehill.PackageDesc.Parser
+import Smokehill.IPackage
+import Smokehill.IPackage.Parser
 import Smokehill.Idris
 import Smokehill.Utils
 import Smokehill.DVCS
 
-auditPackageDesc :: FilePath -> Smokehill ()
-auditPackageDesc fp = do
+auditIPackage :: FilePath -> Smokehill ()
+auditIPackage fp = do
   pkg <- runIO $ parsePkgDescFile fp
 
   sPutWordsLn $ ["Loading of", fp, "successfull."]
 
   sPutStrLn "Searching for required fields..."
-  printPrettyPackageDesc pkg
+  printPrettyIPackage pkg
 
   sPutStrLn "Checking validity of required fields..."
 
@@ -45,7 +45,7 @@ auditPackageDesc fp = do
       sPutStrLn "Good that no package dependencies were specified in the options string."
 
 
-pkgSpecifiedInOptions :: PackageDesc -> Bool
+pkgSpecifiedInOptions :: IPackage -> Bool
 pkgSpecifiedInOptions pkg = result
   where
     result = short_res || long_res

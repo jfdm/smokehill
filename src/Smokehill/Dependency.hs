@@ -7,7 +7,7 @@ import Data.Graph
 import Data.Maybe
 import Data.List
 
-import Smokehill.PackageDesc
+import Smokehill.IPackage
 import Smokehill.Model
 import Smokehill.Utils
 
@@ -51,7 +51,7 @@ buildGraph xs = DepGraph legend' graph
 pruneDeps :: [String] -> [String]
 pruneDeps xs = (\\) xs ["base", "pruvoilj", "effects", "prelude"]
 
-getInstallOrder :: PackageDesc -> Smokehill (List PackageDesc)
+getInstallOrder :: IPackage -> Smokehill (List IPackage)
 getInstallOrder ipkg = do
     ds <- doGet [ipkg] []
     let dg  = buildGraph ds
@@ -61,7 +61,7 @@ getInstallOrder ipkg = do
     res <- mapM searchPackages ds'
     pure $ catMaybes res
   where
-    doGet :: List PackageDesc
+    doGet :: List IPackage
           -> List (String, List String)
           -> Smokehill (List (String, List String))
     doGet []     res = return res

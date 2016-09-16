@@ -19,7 +19,7 @@ import Smokehill.Options
 import Smokehill.API
 import Smokehill.Dependency
 import Smokehill.Utils
-import Smokehill.PackageDesc
+import Smokehill.IPackage
 import Smokehill.Settings
 
 import Utils

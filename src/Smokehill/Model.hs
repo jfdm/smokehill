@@ -9,7 +9,7 @@ import qualified Control.Monad.Trans.Class as Trans (lift)
 import System.IO
 import System.IO.Error(isUserError, ioeGetErrorString, tryIOError)
 
-import Smokehill.PackageDesc
+import Smokehill.IPackage
 import Smokehill.DVCS
 import Utils
 
@@ -31,7 +31,7 @@ runMain prog = do
 
 data SState = SState
   {
-    library :: [PackageDesc]
+    library :: [IPackage]
   , iexe    :: FilePath
   , dbloc   :: DVCS
   } deriving (Show)
@@ -53,12 +53,12 @@ updateState u = do
 
 --  ---------------------------------------------------------------- [ Lib API ]
 
-setLibrary :: [PackageDesc] -> Smokehill ()
+setLibrary :: [IPackage] -> Smokehill ()
 setLibrary ls = do
   st <- getState
   put (st {library = ls})
 
-getLibrary :: Smokehill [PackageDesc]
+getLibrary :: Smokehill [IPackage]
 getLibrary = do
   st <- getState
   return (library st)

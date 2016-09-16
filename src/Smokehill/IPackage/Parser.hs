@@ -1,4 +1,4 @@
-module Smokehill.PackageDesc.Parser
+module Smokehill.IPackage.Parser
   (
     parsePkgDesc
   , parsePkgDescFile
@@ -21,7 +21,7 @@ import qualified Text.Megaparsec.Lexer as L
 import qualified Text.Megaparsec.Prim  as P (runParser)
 
 import Smokehill.Model
-import Smokehill.PackageDesc
+import Smokehill.IPackage
 
 --  ------------------------------------------------------------ [ Definitions ]
 
@@ -33,16 +33,16 @@ reservedWords = []
 
 --  ----------------------------------------------------------------- [ Parser ]
 
-type PParser a = StateT PackageDesc Parser a
+type PParser a = StateT IPackage Parser a
 
-parsePkgDesc :: FilePath -> String -> Either String PackageDesc
+parsePkgDesc :: FilePath -> String -> Either String IPackage
 parsePkgDesc fn str =
   either (\x -> Left $ parseErrorPretty x)
          Right
          (P.runParser (execStateT pkgDesc defaultPkg) fn str)
 
 
-parsePkgDescFile :: FilePath -> IO (PackageDesc)
+parsePkgDescFile :: FilePath -> IO (IPackage)
 parsePkgDescFile fn = do
   str <- readFile fn
 
@@ -53,7 +53,7 @@ parsePkgDescFile fn = do
       exitFailure
     Right x -> return x
 
-pkgDesc :: PParser PackageDesc
+pkgDesc :: PParser IPackage
 pkgDesc = do
     st <- get
     keyword "package"

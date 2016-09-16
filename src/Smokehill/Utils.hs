@@ -13,8 +13,8 @@ import Data.Char
 import qualified Data.Yaml as Y
 
 import Smokehill.Model
-import Smokehill.PackageDesc
-import Smokehill.PackageDesc.Parser
+import Smokehill.IPackage
+import Smokehill.IPackage.Parser
 import Smokehill.Idris
 import Smokehill.Settings
 import Data.Version
@@ -80,13 +80,13 @@ getSystemIdrisIO = do
     Just exeloc -> do
       pure exeloc
 
-searchPackages :: String -> Smokehill (Maybe PackageDesc)
+searchPackages :: String -> Smokehill (Maybe IPackage)
 searchPackages str = do
   libs <- getLibrary
   let res = find (\pkg -> str == pkgname pkg) libs
   pure res
 
-loadLibrary :: IO [PackageDesc]
+loadLibrary :: IO [IPackage]
 loadLibrary = do
     pdir <- getPackageDBIO
 
@@ -133,8 +133,8 @@ getSmokehillConfigDirIO = do
 getSmokehillConfigDir :: Smokehill FilePath
 getSmokehillConfigDir = runIO $ getSmokehillConfigDirIO
 
-printPrettyPackageDesc :: PackageDesc -> Smokehill ()
-printPrettyPackageDesc ipkg = do
+printPrettyIPackage :: IPackage -> Smokehill ()
+printPrettyIPackage ipkg = do
     sPutWordsLn ["Name:\t",    pkgname ipkg]
     sPutWordsLn ["Version:\t", fromMaybe "Not Provided" $ pkgversion ipkg]
     sPutWordsLn ["Brief:\t",   fromMaybe "Not Provided" $ pkgbrief ipkg]
@@ -142,7 +142,7 @@ printPrettyPackageDesc ipkg = do
     sPutWordsLn ["DCVS:\t",    fromMaybe "Not Provided" $ pkgsourceloc ipkg]
     sPutWordsLn ["Deps:\t",    show (pkgdeps ipkg)]
 
-pkgSearch :: String -> PackageDesc -> Bool
+pkgSearch :: String -> IPackage -> Bool
 pkgSearch x ipkg = (lowerName x) `isInfixOf` (lowerName $ pkgname ipkg)
   where
     lowerName :: String -> String

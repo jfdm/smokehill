@@ -1,12 +1,12 @@
 -- | Because depending on Idris is too much.
-module Smokehill.PackageDesc where
+module Smokehill.IPackage where
 
 -- | Simple name space description
 data Name = UName String
           | NSName String Name
           deriving (Show)
 
-data PackageDesc = PackageDesc
+data IPackage = IPackage
   { pkgname       :: String
   , pkgdeps       :: [String]
   , pkgbrief      :: Maybe String
@@ -30,8 +30,8 @@ data PackageDesc = PackageDesc
   }
   deriving (Show)
 
-defaultPkg :: PackageDesc
-defaultPkg = PackageDesc
+defaultPkg :: IPackage
+defaultPkg = IPackage
   "" [] Nothing Nothing Nothing Nothing
   Nothing Nothing Nothing Nothing
   Nothing [] [] Nothing [] "" [] Nothing Nothing []

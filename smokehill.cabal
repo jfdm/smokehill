@@ -26,8 +26,8 @@ executable smokehill
                      , Smokehill.DVCS
                      , Smokehill.API
                      , Smokehill.Idris
-                     , Smokehill.PackageDesc
-                     , Smokehill.PackageDesc.Parser
+                     , Smokehill.IPackage
+                     , Smokehill.IPackage.Parser
                      , Smokehill.Settings
                      , Utils
 

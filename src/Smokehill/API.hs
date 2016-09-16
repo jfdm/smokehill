@@ -21,7 +21,7 @@ import System.Exit
 import Data.List
 import Data.Maybe
 
-import Smokehill.PackageDesc
+import Smokehill.IPackage
 import Smokehill.Model
 import Smokehill.DVCS
 import Smokehill.Dependency
@@ -46,7 +46,7 @@ updatePackageIndex = do
     ExitSuccess -> pure ()
 
 auditPackage :: String -> Smokehill ()
-auditPackage = auditPackageDesc
+auditPackage = auditIPackage
 
 showPaths :: Smokehill ()
 showPaths = do
@@ -92,7 +92,7 @@ showPackage pkg = do
   res <- searchPackages pkg
   case res of
     Nothing  -> sPutWordsLn ["Package not found", pkg]
-    Just pkg -> printPrettyPackageDesc pkg
+    Just pkg -> printPrettyIPackage pkg
 
 listInstalled :: Smokehill ()
 listInstalled = do
@@ -127,7 +127,7 @@ installPackage pkg dryrun force = do
                 sPutWordsLn $ ["Installing Packages:"] ++ map pkgname ds''
                 mapM_ (\x -> performInstall x dryrun) ds''
 
-performInstall :: PackageDesc -> Bool -> Smokehill ()
+performInstall :: IPackage -> Bool -> Smokehill ()
 performInstall ipkg dryrun = do
     sPutWordsLn ["Attempting to install:", pkgname ipkg]
     cdir <- getSmokehillCacheDir
@@ -152,7 +152,7 @@ performInstall ipkg dryrun = do
                   errno <- runIO $ dvcsClone dvcs cdir (pkgname ipkg)
                   doInstall errno pdir ipkg
   where
-    doInstall :: ExitCode -> FilePath -> PackageDesc -> Smokehill ()
+    doInstall :: ExitCode -> FilePath -> IPackage -> Smokehill ()
     doInstall err@(ExitFailure _) _    _    = runIO $ exitWith err
     doInstall ExitSuccess         pdir ipkg = do
       let pfile = pdir </> (pkgname ipkg) -<.> "ipkg"
