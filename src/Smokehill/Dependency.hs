@@ -8,22 +8,27 @@ import Data.Maybe
 import Data.List
 
 import Smokehill.IPackage
+import Smokehill.PackageConfig
 import Smokehill.Model
 import Smokehill.Utils
 
 import Utils
 
-buildLegend :: [(String, [String])] -> Int -> [(String,Int)] -> [(String,Int)]
+buildLegend :: List (String, [String])
+            -> Int
+            -> List (String,Int)
+            -> List (String,Int)
 buildLegend []         c cs = []
 buildLegend ((x,_):xs) c cs = (x,c) : buildLegend xs (c+1) cs
 
 
 data DepGraph a = DepGraph
-  { legend :: [(Int, a)]
+  { legend :: List (Int, a)
   , graph  :: Graph
   } deriving (Show)
 
-buildGraph :: [(String, [String])] -> DepGraph String
+buildGraph :: List (String, List String)
+           -> DepGraph String
 buildGraph xs = DepGraph legend' graph
   where
     legend :: [(String,Int)]
@@ -39,19 +44,19 @@ buildGraph xs = DepGraph legend' graph
     mergeMaybes _                = Nothing
 
 
-    buildEdge :: (String, [String]) -> [(String,String)]
+    buildEdge :: (String, List String) -> List (String,String)
     buildEdge (k,vs) = map (\v -> (k,v)) vs
 
-    buildEdges :: [(String, [String])] -> [(String,String)]
+    buildEdges :: List (String, List String) -> List (String,String)
     buildEdges = concatMap (\e -> buildEdge e)
 
-    buildEdgesStr :: [(Maybe Int, Maybe Int)]
+    buildEdgesStr :: List (Maybe Int, Maybe Int)
     buildEdgesStr = map (\(a,b) -> (lookup a legend, lookup b legend)) (buildEdges xs)
 
-pruneDeps :: [String] -> [String]
+pruneDeps :: List String -> List String
 pruneDeps xs = (\\) xs ["base", "pruvoilj", "effects", "prelude"]
 
-getInstallOrder :: IPackage -> Smokehill (List IPackage)
+getInstallOrder :: PackageConfig -> Smokehill (List PackageConfig)
 getInstallOrder ipkg = do
     ds <- doGet [ipkg] []
     let dg  = buildGraph ds
@@ -61,12 +66,12 @@ getInstallOrder ipkg = do
     res <- mapM searchPackages ds'
     pure $ catMaybes res
   where
-    doGet :: List IPackage
+    doGet :: List PackageConfig
           -> List (String, List String)
           -> Smokehill (List (String, List String))
     doGet []     res = return res
     doGet (x:xs) res = do
-      let deps = pruneDeps (pkgdeps x)
-      ds' <- mapM searchPackages deps
+      let pdeps = pruneDeps (deps x)
+      ds' <- mapM searchPackages pdeps
       let ds = catMaybes ds'
-      doGet (ds ++ xs) ([(pkgname x, deps)] ++ res)
+      doGet (ds ++ xs) ([(name x, pdeps)] ++ res)

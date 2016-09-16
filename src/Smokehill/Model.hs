@@ -12,6 +12,8 @@ import System.IO.Error(isUserError, ioeGetErrorString, tryIOError)
 
 import Smokehill.IPackage
 import Smokehill.DVCS
+import Smokehill.PackageConfig
+
 import Utils
 
 --  ------------------------------------------------ [ Smokehill Program Model ]
@@ -32,7 +34,7 @@ runMain prog = do
 
 data SState = SState
   {
-    library :: [IPackage]
+    library :: [PackageConfig]
   , iexe    :: FilePath
   , dbloc   :: DVCS
   } deriving (Show)
@@ -54,12 +56,12 @@ updateState u = do
 
 --  ---------------------------------------------------------------- [ Lib API ]
 
-setLibrary :: [IPackage] -> Smokehill ()
+setLibrary :: [PackageConfig] -> Smokehill ()
 setLibrary ls = do
   st <- getState
   put (st {library = ls})
 
-getLibrary :: Smokehill [IPackage]
+getLibrary :: Smokehill [PackageConfig]
 getLibrary = do
   st <- getState
   return (library st)

@@ -31,6 +31,7 @@ import Smokehill.Idris
 import Smokehill.Audit
 import Smokehill.Settings
 import Smokehill.PackageConfig
+import Smokehill.PackageConfig.Utils
 import Smokehill.IPackage.Parser
 
 convertPackageFile :: FilePath
@@ -102,14 +103,14 @@ searchForPackage pkg = do
   let res = filter (pkgSearch pkg) libs
   case res of
     []   -> sPutWordsLn ["Package not found", pkg]
-    pkgs -> mapM_ (\x -> sPutWordsLn ["-->", pkgname x]) pkgs
+    pkgs -> mapM_ (\x -> sPutWordsLn ["-->", name x]) pkgs
 
 showPackage :: String -> Smokehill ()
 showPackage pkg = do
   res <- searchPackages pkg
   case res of
     Nothing  -> sPutWordsLn ["Package not found", pkg]
-    Just pkg -> printPrettyIPackage pkg
+    Just pkg -> displayConfig pkg
 
 listInstalled :: Smokehill ()
 listInstalled = do
@@ -125,12 +126,12 @@ installPackage pkg dryrun force = do
 
       ps <- idrisPkgs
 
-      let there = find ((pkgname ipkg) ==) ps
+      let there = find ((name ipkg) ==) ps
 
       if (isJust there) && (not force)
         then sPutStrLn "Package already installed."
         else do
-          sPutWordsLn ["Installing", pkgname ipkg]
+          sPutWordsLn ["Installing", name ipkg]
           sPutWordsLn ["Determining Dependencies"]
           ds <- getInstallOrder ipkg
           case ds of
@@ -138,41 +139,36 @@ installPackage pkg dryrun force = do
                 sPutStrLn "No dependencies"
                 performInstall ipkg dryrun
             is -> do
-                let ds' = filter (\x -> not $ (pkgname x) `elem` ps) ds
+                let ds' = filter (\x -> not $ (name x) `elem` ps) ds
                 let ds'' = if force then ds else ds'
 
-                sPutWordsLn $ ["Installing Packages:"] ++ map pkgname ds''
+                sPutWordsLn $ ["Installing Packages:"] ++ map name ds''
                 mapM_ (\x -> performInstall x dryrun) ds''
 
-performInstall :: IPackage -> Bool -> Smokehill ()
+performInstall :: PackageConfig -> Bool -> Smokehill ()
 performInstall ipkg dryrun = do
-    sPutWordsLn ["Attempting to install:", pkgname ipkg]
+    sPutWordsLn ["Attempting to install:", name ipkg]
     cdir <- getSmokehillCacheDir
-    pdir <- runIO $ makeAbsolute (cdir </> (pkgname ipkg))
+    pdir <- runIO $ makeAbsolute (cdir </> (name ipkg))
     d    <- runIO $ doesDirectoryExist pdir
-    case (pkgsourceloc ipkg) of
-      Nothing   -> sPutWordsLn ["Source Location not specified"]
-      Just sloc -> do
-        case whichDVCS sloc of
-          Nothing   -> sPutWordsLn ["Package is not a valid DVCS url",  sloc]
-          Just dvcs -> do
-            if d
-              then do
-                sPutWordsLn ["Directory already exists, checking for updates."]
-                when (not dryrun) $ do
-                  errno <- runIO $ dvcsUpdate dvcs pdir
-                  doInstall errno pdir ipkg
-              else do
-                sPutWordsLn ["Directory doesn't exists, cloning."]
-                sPutWordsLn ["Cloning Git Repo"]
-                when (not dryrun) $ do
-                  errno <- runIO $ dvcsClone dvcs cdir (pkgname ipkg)
-                  doInstall errno pdir ipkg
+    let dvcs = sourceloc ipkg
+    if d
+      then do
+        sPutWordsLn ["Directory already exists, checking for updates."]
+        when (not dryrun) $ do
+          errno <- runIO $ dvcsUpdate dvcs pdir
+          doInstall errno pdir ipkg
+      else do
+        sPutWordsLn ["Directory doesn't exists, cloning."]
+        sPutWordsLn ["Cloning Git Repo"]
+        when (not dryrun) $ do
+          errno <- runIO $ dvcsClone dvcs cdir (name ipkg)
+          doInstall errno pdir ipkg
   where
-    doInstall :: ExitCode -> FilePath -> IPackage -> Smokehill ()
+    doInstall :: ExitCode -> FilePath -> PackageConfig -> Smokehill ()
     doInstall err@(ExitFailure _) _    _    = runIO $ exitWith err
     doInstall ExitSuccess         pdir ipkg = do
-      let pfile = pdir </> (pkgname ipkg) -<.> "ipkg"
+      let pfile = pdir </> (name ipkg) -<.> "ipkg"
       sPutWordsLn ["Attempting to install using:", pfile]
       when (not dryrun) $ do
         idrisInstall pdir pfile

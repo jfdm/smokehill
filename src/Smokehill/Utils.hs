@@ -15,6 +15,8 @@ import qualified Data.Yaml as Y
 import Smokehill.Model
 import Smokehill.IPackage
 import Smokehill.IPackage.Parser
+import Smokehill.PackageConfig hiding (version)
+import Smokehill.PackageConfig.Utils
 import Smokehill.Idris
 import Smokehill.Settings
 import Data.Version
@@ -80,24 +82,24 @@ getSystemIdrisIO = do
     Just exeloc -> do
       pure exeloc
 
-searchPackages :: String -> Smokehill (Maybe IPackage)
+searchPackages :: String -> Smokehill (Maybe PackageConfig)
 searchPackages str = do
   libs <- getLibrary
-  let res = find (\pkg -> str == pkgname pkg) libs
+  let res = find (\pkg -> str == name pkg) libs
   pure res
 
-loadLibrary :: IO [IPackage]
+loadLibrary :: IO [PackageConfig]
 loadLibrary = do
     pdir <- getPackageDBIO
 
     ps   <- listDirectory pdir
-    case filter (correctExtIPKG) ps of
+    case filter (correctExtYAML) ps of
       [] -> do
         putStrLn "Package DB is empty."
         pure []
       ps' -> do
         let ps'' = map (pdir </>) ps'
-        mapM parsePkgDescFileIO ps''
+        mapM configFromFileIO ps''
 
 getPackageDBIO :: IO FilePath
 getPackageDBIO = do
@@ -142,8 +144,8 @@ printPrettyIPackage ipkg = do
     sPutWordsLn ["DCVS:\t",    fromMaybe "Not Provided" $ pkgsourceloc ipkg]
     sPutWordsLn ["Deps:\t",    show (pkgdeps ipkg)]
 
-pkgSearch :: String -> IPackage -> Bool
-pkgSearch x ipkg = (lowerName x) `isInfixOf` (lowerName $ pkgname ipkg)
+pkgSearch :: String -> PackageConfig -> Bool
+pkgSearch x ipkg = (lowerName x) `isInfixOf` (lowerName $ name ipkg)
   where
     lowerName :: String -> String
     lowerName = map toLower
