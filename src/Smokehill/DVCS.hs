@@ -98,7 +98,7 @@ dvcsUpdate dvcs loc = do
   rdir <- makeAbsolute loc
   withCurrentDirectory rdir $ do
     case dvcs of
-      (Git _) -> doDVCS "git" ["pull"]
+      (Git _) -> doDVCS "git" ["pull", "origin", "master"]
       (HG  _) -> doDVCS "hg"  ["pull", "-u"]
 
 

@@ -29,12 +29,15 @@ idrisInstall :: FilePath
              -> Smokehill ()
 idrisInstall dir ipkg = do
   iexe <- getIdrisExe
-  runIO $ do
-    dir' <- makeAbsolute dir
-    withCurrentDirectory dir' $ do
-      putStrLn $ unwords [iexe, "--install", ipkg]
-      callProcess iexe ["--install", ipkg]
-
+  catchError
+    (runIO $ do
+      dir' <- makeAbsolute dir
+      withCurrentDirectory dir' $ do
+        putStrLn $ unwords [iexe, "--install", ipkg]
+        callProcess iexe ["--install", ipkg])
+    (\err -> do
+            sPutStrLn "Error when installing package"
+            runIO $ exitFailure)
 
 idrisLibDir :: Smokehill FilePath
 idrisLibDir = do

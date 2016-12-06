@@ -1,17 +1,16 @@
-resolver: lts-7.10
+resolver: lts-7.12
 
 packages:
   - '.'
 
 # Dependency packages to be pulled from upstream that are not in the resolver
 # (e.g., acme-missiles-0.3)
-extra-deps:
-  - megaparsec-5.0.1
-  - directory-1.2.6.3
+# extra-deps: {}
+
+
 
 # Override default flag values for local packages and extra-deps
 flags: {}
 
 # Extra package databases containing global packages
 extra-package-dbs: []
-
