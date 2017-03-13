@@ -1,5 +1,7 @@
 module Smokehill.Options where
 
+import Data.Monoid ((<>))
+
 import Options.Applicative
 
 import Smokehill.Utils (getSmokehillVersion)
