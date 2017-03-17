@@ -117,8 +117,8 @@ listInstalled = do
   pkgs <- idrisPkgs
   mapM_ sPutStrLn pkgs
 
-installPackage :: String -> Bool -> Bool -> Smokehill()
-installPackage pkg dryrun force = do
+installPackage :: String -> Bool -> Bool -> Bool -> Smokehill()
+installPackage pkg dryrun force docs = do
   res <- searchPackages pkg
   case res of
     Nothing    -> sPutStrLn "Package doesn't exist in repo."
@@ -137,16 +137,16 @@ installPackage pkg dryrun force = do
           case ds of
             [ipkg] -> do
                 sPutStrLn "No dependencies"
-                performInstall ipkg dryrun
+                performInstall ipkg dryrun docs
             is -> do
                 let ds' = filter (\x -> not $ (name x) `elem` ps) ds
                 let ds'' = if force then ds else ds'
 
                 sPutWordsLn $ ["Installing Packages:"] ++ map name ds''
-                mapM_ (\x -> performInstall x dryrun) ds''
+                mapM_ (\x -> performInstall x dryrun docs) ds''
 
-performInstall :: PackageConfig -> Bool -> Smokehill ()
-performInstall ipkg dryrun = do
+performInstall :: PackageConfig -> Bool -> Bool -> Smokehill ()
+performInstall ipkg dryrun docs = do
     sPutWordsLn ["Attempting to install:", name ipkg]
     cdir <- getSmokehillCacheDir
     pdir <- runIO $ makeAbsolute (cdir </> (name ipkg))
@@ -157,18 +157,18 @@ performInstall ipkg dryrun = do
         sPutWordsLn ["Directory already exists, checking for updates."]
         when (not dryrun) $ do
           errno <- runIO $ dvcsUpdate dvcs pdir
-          doInstall errno pdir ipkg
+          doInstall errno pdir ipkg docs
       else do
         sPutWordsLn ["Directory doesn't exists, cloning."]
         sPutWordsLn ["Cloning Git Repo"]
         when (not dryrun) $ do
           errno <- runIO $ dvcsClone dvcs cdir (name ipkg)
-          doInstall errno pdir ipkg
+          doInstall errno pdir ipkg docs
   where
-    doInstall :: ExitCode -> FilePath -> PackageConfig -> Smokehill ()
-    doInstall err@(ExitFailure _) _    _    = runIO $ exitWith err
-    doInstall ExitSuccess         pdir ipkg = do
+    doInstall :: ExitCode -> FilePath -> PackageConfig -> Bool -> Smokehill ()
+    doInstall err@(ExitFailure _) _    _    _    = runIO $ exitWith err
+    doInstall ExitSuccess         pdir ipkg docs = do
       let pfile = pdir </> (name ipkg) -<.> "ipkg"
       sPutWordsLn ["Attempting to install using:", pfile]
       when (not dryrun) $ do
-        idrisInstall pdir pfile
+        idrisInstall pdir pfile docs

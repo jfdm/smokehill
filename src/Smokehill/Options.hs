@@ -61,8 +61,9 @@ cmdParser = subparser (
       cmdInstall :: Parser Command
       cmdInstall = CMDInstall
         <$> argument str (metavar "PKG")
-        <*> switch (long "dry-run" <> help "Do not try to install")
-        <*> switch (long "force"   <> help "Force installation")
+        <*> switch (long "dry-run"   <> help "Do not try to install")
+        <*> switch (long "force"     <> help "Force installation")
+        <*> switch (long "with-docs" <> help "Attempt to install documentatio")
 
       cmdCleanup :: Parser Command
       cmdCleanup = CMDCleanup <$> switch (long "force" <> help "Perform cleanup of cache")
@@ -104,7 +105,7 @@ data Option = Option (Maybe FilePath) Command
 data Command = CMDInstalled                       -- ^ List installed packages
              | CMDSearch String                   -- ^ Search for package
              | CMDShow   String                   -- ^ Show package info
-             | CMDInstall String Bool Bool        -- ^ Try to install package, bool dry run.
+             | CMDInstall String Bool Bool Bool   -- ^ Try to install package, bool dry run.
              | CMDCleanup Bool                    -- ^ Clean cache, bool to do clean
              | CMDPaths                           -- ^ Show paths
              | CMDAudit String                    -- ^ Audit a ipkg file for use in conversion.

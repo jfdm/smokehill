@@ -43,13 +43,13 @@ smokehillMain = runMain $ do
   setPackageRepo (ipkg_repo settings)
 
   case cmd of
-    (CMDInstalled)       -> listInstalled
-    (CMDSearch  pkg)     -> searchForPackage pkg
-    (CMDShow    pkg)     -> showPackage pkg
-    (CMDInstall pkg d f) -> installPackage pkg d f
-    (CMDCleanup b)       -> cleanCache b
-    (CMDPaths)           -> showPaths
-    (CMDAudit   pkg)     -> auditPackage pkg
-    (CMDUpdate)          -> updatePackageIndex
-    (CMDConvert pkg f)   -> convertPackageFile pkg f
+    (CMDInstalled)         -> listInstalled
+    (CMDSearch  pkg)       -> searchForPackage pkg
+    (CMDShow    pkg)       -> showPackage pkg
+    (CMDInstall pkg d f i) -> installPackage pkg d f i
+    (CMDCleanup b)         -> cleanCache b
+    (CMDPaths)             -> showPaths
+    (CMDAudit   pkg)       -> auditPackage pkg
+    (CMDUpdate)            -> updatePackageIndex
+    (CMDConvert pkg f)     -> convertPackageFile pkg f
   runIO $ exitSuccess

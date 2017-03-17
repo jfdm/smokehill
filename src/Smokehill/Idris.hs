@@ -6,6 +6,8 @@ module Smokehill.Idris
   , idrisExe
   ) where
 
+import Control.Monad
+
 import System.Directory
 import System.FilePath
 import System.IO
@@ -26,15 +28,19 @@ doIdris exe args = do
 
 idrisInstall :: FilePath
              -> String
+             -> Bool
              -> Smokehill ()
-idrisInstall dir ipkg = do
+idrisInstall dir ipkg docs = do
   iexe <- getIdrisExe
   catchError
     (runIO $ do
       dir' <- makeAbsolute dir
       withCurrentDirectory dir' $ do
         putStrLn $ unwords [iexe, "--install", ipkg]
-        callProcess iexe ["--install", ipkg])
+        callProcess iexe ["--install", ipkg]
+        when docs $ do
+          putStrLn $ unwords [iexe, "--installdoc", ipkg]
+          callProcess iexe ["--installdoc", ipkg])
     (\err -> do
             sPutStrLn "Error when installing package"
             runIO $ exitFailure)
