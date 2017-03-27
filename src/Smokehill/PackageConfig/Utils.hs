@@ -20,7 +20,8 @@ configFromFileIO fname = do
   res <- Y.decodeFileEither fname
   case res of
     Left err -> dieIO $ do
-        putStrLn "Malformed Yaml file."
+        putStr "Malformed Yaml file:"
+        putStrLn $ show fname
         putStrLn $ Y.prettyPrintParseException err
     Right x -> return x
 
