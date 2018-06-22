@@ -10,16 +10,17 @@ import Control.Monad (void)
 import Control.Monad.State.Lazy
 import Control.Monad.Identity
 
+import Control.Monad.Writer.Strict (MonadWriter(..), WriterT(..), listen, runWriterT, tell)
+
 import Data.Either
 import Data.List (union)
+import Data.Void (Void(..))
 
 import Text.Megaparsec
-import Text.Megaparsec.Char
-import Text.Megaparsec.String -- input stream is of type ‘String’
-import Text.Megaparsec.Error
 
-import qualified Text.Megaparsec.Lexer as L
-import qualified Text.Megaparsec.Prim  as P (runParser)
+import qualified Text.Megaparsec as P
+import qualified Text.Megaparsec.Char as P
+import qualified Text.Megaparsec.Char.Lexer as L
 
 import Smokehill.Model
 import Smokehill.IPackage
@@ -34,13 +35,14 @@ reservedWords = []
 
 --  ----------------------------------------------------------------- [ Parser ]
 
-type PParser a = StateT IPackage Parser a
+
+type IPkgParser = StateT IPackage (P.Parsec Void String)
 
 parsePkgDesc :: FilePath -> String -> Either String IPackage
 parsePkgDesc fn str =
-  either (\x -> Left $ parseErrorPretty x)
-         Right
-         (P.runParser (execStateT pkgDesc defaultPkg) fn str)
+  case P.parse (evalStateT pkgDesc defaultPkg) fn str of
+     Left err  -> Left $ parseErrorPretty err
+     Right res -> Right res
 
 parsePkgDescFile :: FilePath -> Smokehill (IPackage)
 parsePkgDescFile fn = do
@@ -64,7 +66,7 @@ parsePkgDescFileIO fn = do
       exitFailure
     Right x -> return x
 
-pkgDesc :: PParser IPackage
+pkgDesc :: IPkgParser IPackage
 pkgDesc = do
     st <- get
     keyword "package"
@@ -76,7 +78,7 @@ pkgDesc = do
     return st
   <?> "PkgDesc"
 
-kvpairs :: PParser ()
+kvpairs :: IPkgParser ()
 kvpairs = executable
       <|> srcdir
       <|> opts
@@ -98,7 +100,7 @@ kvpairs = executable
       <|> homepage
       <?> "Key Value Pairs"
 
-executable :: PParser ()
+executable :: IPkgParser ()
 executable = do
   keyword "executable"
   equals
@@ -106,7 +108,7 @@ executable = do
   st <- get
   put (st {execout = Just en})
 
-main :: PParser ()
+main :: IPkgParser ()
 main = do
   keyword "main"
   equals
@@ -114,7 +116,7 @@ main = do
   st <- get
   put (st {idris_main = Just mn})
 
-srcdir :: PParser ()
+srcdir :: IPkgParser ()
 srcdir = do
   keyword "sourcedir"
   equals
@@ -122,17 +124,17 @@ srcdir = do
   st <- get
   put (st {sourcedir = sdir})
 
-opts :: PParser ()
+opts :: IPkgParser ()
 opts = do
   keyword "opts"
   equals
   os <- stringLiteral
-  eol
+  P.eol
   sc
   st <- get
   put (st {idris_opts = unwords [os, idris_opts st]})
 
-pkgs :: PParser ()
+pkgs :: IPkgParser ()
 pkgs = do
   keyword "pkgs"
   equals
@@ -140,7 +142,7 @@ pkgs = do
   st <- get
   put (st { pkgdeps = ps `union` (pkgdeps st)})
 
-imodules :: PParser ()
+imodules :: IPkgParser ()
 imodules = do
   keyword "modules"
   equals
@@ -148,7 +150,7 @@ imodules = do
   st <- get
   put (st {modules = modules st ++ ms})
 
-libs :: PParser ()
+libs :: IPkgParser ()
 libs = do
   keyword "libs"
   equals
@@ -156,7 +158,7 @@ libs = do
   st <- get
   put (st {libdeps = map toString ms ++ libdeps st})
 
-iobjs :: PParser ()
+iobjs :: IPkgParser ()
 iobjs = do
   keyword "objs"
   equals
@@ -164,7 +166,7 @@ iobjs = do
   st <- get
   put (st {objs = map toString ms ++ objs st})
 
-imakefile :: PParser ()
+imakefile :: IPkgParser ()
 imakefile = do
   keyword "makefile"
   equals
@@ -173,7 +175,7 @@ imakefile = do
   put (st {makefile = Just (toString mf)})
 
 
-tests :: PParser ()
+tests :: IPkgParser ()
 tests = do
   keyword "tests"
   equals
@@ -181,92 +183,92 @@ tests = do
   st <- get
   put (st {idris_tests = idris_tests st ++ ts})
 
-version :: PParser ()
+version :: IPkgParser ()
 version = do
   keyword "version"
   equals
-  x <- manyTill anyChar eol
+  x <- manyTill P.anyChar P.eol
   sc
   st <- get
   put (st {pkgversion = Just x})
 
-readme :: PParser ()
+readme :: IPkgParser ()
 readme = do
   keyword "readme"
   equals
-  x <- manyTill anyChar eol
+  x <- manyTill P.anyChar P.eol
   sc
   st <- get
   put (st {pkgreadme = Just x})
 
-license :: PParser ()
+license :: IPkgParser ()
 license = do
   keyword "license"
   equals
-  x <- manyTill anyChar eol
+  x <- manyTill P.anyChar P.eol
   sc
   st <- get
   put (st {pkglicense = Just x})
 
-sourceloc :: PParser ()
+sourceloc :: IPkgParser ()
 sourceloc = do
   keyword "sourceloc"
   equals
-  x <- manyTill anyChar eol
+  x <- manyTill P.anyChar P.eol
   sc
   st <- get
   put (st {pkgsourceloc = Just x})
 
 
-bugtracker :: PParser ()
+bugtracker :: IPkgParser ()
 bugtracker = do
   keyword "bugtracker"
   equals
-  x <- manyTill anyChar eol
+  x <- manyTill P.anyChar P.eol
   sc
   st <- get
   put (st {pkgbugtracker = Just x})
 
-brief :: PParser ()
+brief :: IPkgParser ()
 brief = do
   keyword "brief"
   equals
   x <- stringLiteral
-  eol
+  P.eol
   sc
   st <- get
   put (st {pkgbrief = Just x})
 
-author :: PParser ()
+author :: IPkgParser ()
 author = do
   keyword "author"
   equals
-  x <- manyTill anyChar eol
+  x <- manyTill P.anyChar P.eol
   sc
   st <- get
   put (st {pkgauthor = Just x})
 
-maintainer :: PParser ()
+maintainer :: IPkgParser ()
 maintainer = do
   keyword "maintainer"
   equals
-  x <- manyTill anyChar eol
+  x <- manyTill P.anyChar P.eol
   sc
   st <- get
   put (st {pkgmaintainer = Just x})
 
-homepage :: PParser ()
+homepage :: IPkgParser ()
 homepage = do
   keyword "homepage"
   equals
-  x <- manyTill anyChar eol
+  x <- manyTill P.anyChar P.eol
   sc
   st <- get
   put (st {pkghomepage = Just x})
 
 --  ------------------------------------------------------------------ [ Idris ]
 
-name :: PParser Name
+name :: IPkgParser Name
 name = do
     ns <- sepBy1 identifier period
     case toName ns of
@@ -274,47 +276,47 @@ name = do
       Just n  -> return n
 
 --  ------------------------------------------------------------------ [ Lexer ]
-lexeme :: PParser a -> PParser a
+lexeme :: IPkgParser a -> IPkgParser a
 lexeme = L.lexeme sc
 
-symbol :: String -> PParser String
+symbol :: String -> IPkgParser String
 symbol = L.symbol sc
 
-equals :: PParser ()
+equals :: IPkgParser ()
 equals = do
   symbol "="
   return ()
 
-comma :: PParser ()
+comma :: IPkgParser ()
 comma = do
   symbol ","
   return ()
 
-period :: PParser ()
+period :: IPkgParser ()
 period = do
   symbol "."
   return ()
 
-keyword :: String -> PParser String
+keyword :: String -> IPkgParser String
 keyword w = do
-  s <- string w
-  notFollowedBy alphaNumChar
+  s <- P.string w
+  notFollowedBy P.alphaNumChar
   sc
   return s
 
-stringLiteral :: PParser String
-stringLiteral = char '"' >> manyTill L.charLiteral (char '"')
+stringLiteral :: IPkgParser String
+stringLiteral = P.char '"' >> manyTill L.charLiteral (P.char '"')
 
-identifier :: PParser String
+identifier :: IPkgParser String
 identifier = lexeme (p >>= check)
   where
-    p       = (:) <$> letterChar <*> many alphaNumChar
+    p       = (:) <$> P.letterChar <*> many P.alphaNumChar
     check x = if x `elem` reservedWords
                 then fail $ "keyword " ++ show x ++ " cannot be an identifier"
                 else return x
 
-sc :: PParser ()
-sc = L.space (void spaceChar) lineCmt blockCmt
+sc :: IPkgParser ()
+sc = L.space (void P.spaceChar) lineCmt blockCmt
   where
     lineCmt = L.skipLineComment commentLn
     blockCmt = L.skipBlockComment commentBlkL commentBlkR

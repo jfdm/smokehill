@@ -54,7 +54,7 @@ buildGraph xs = DepGraph legend' graph
     buildEdgesStr = map (\(a,b) -> (lookup a legend, lookup b legend)) (buildEdges xs)
 
 pruneDeps :: List String -> List String
-pruneDeps xs = (\\) xs ["base", "pruvoilj", "effects", "prelude"]
+pruneDeps xs = (\\) xs ["base", "pruvoilj", "effects", "prelude", "contrib"]
 
 getInstallOrder :: PackageConfig -> Smokehill (List PackageConfig)
 getInstallOrder ipkg = do
