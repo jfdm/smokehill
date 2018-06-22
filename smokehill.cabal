@@ -49,4 +49,6 @@ executable smokehill
                      , mtl
                      , yaml
                      , bytestring
+                     , prettyprinter
+
   ghc-options: -threaded

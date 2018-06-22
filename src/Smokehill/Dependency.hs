@@ -8,6 +8,10 @@ import Data.Graph
 import Data.Maybe
 import Data.List
 
+import Data.Text.Prettyprint.Doc
+import Data.Text.Prettyprint.Doc.Render.Text
+
+
 import Smokehill.IPackage
 import Smokehill.PackageConfig
 import Smokehill.Model
@@ -27,6 +31,23 @@ data DepGraph a = DepGraph
   { legend :: List (Int, a)
   , graph  :: Graph
   } deriving (Show)
+
+prettyDepGraph :: Pretty a
+               => String
+               -> DepGraph a
+               -> Doc ann
+prettyDepGraph n (DepGraph l g) =
+   vcat $  [ pretty "digraph" <+> pretty n <+> pretty "{" <> hardline ]
+        ++ [hcat [pretty "rankdir", equals, pretty "BT", semi]]
+        ++ body
+        ++ [ pretty "}" <> hardline ]
+  where
+    body = punctuate hardline prettyBody
+    prettyBody = mapMaybe prettyEdge (edges g)
+    prettyEdge (a,b) = do
+      idA <- lookup a l
+      idB <- lookup b l
+      pure $ indent 2 $ hcat [pretty idB, pretty "->", pretty idA, semi]
 
 buildGraph :: List (String, List String)
            -> DepGraph String
@@ -81,7 +102,8 @@ sBuildGraph p ipkg = do
 showDependencyGraph :: PackageConfig -> Smokehill ()
 showDependencyGraph ipkg = do
   g <- sBuildGraph False ipkg
-  sPrintLn g
+  let pg = prettyDepGraph (name ipkg) g
+  runIO $ putDoc pg
 
 getInstallOrder :: PackageConfig -> Smokehill (List PackageConfig)
 getInstallOrder ipkg = do
