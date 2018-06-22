@@ -1,6 +1,7 @@
 module Smokehill.Dependency
   (
     getInstallOrder
+  , showDependencyGraph
   ) where
 
 import Data.Graph
@@ -56,22 +57,37 @@ buildGraph xs = DepGraph legend' graph
 pruneDeps :: List String -> List String
 pruneDeps xs = (\\) xs ["base", "pruvoilj", "effects", "prelude", "contrib"]
 
-getInstallOrder :: PackageConfig -> Smokehill (List PackageConfig)
-getInstallOrder ipkg = do
-    ds <- doGet [ipkg] []
-    let dg  = buildGraph ds
-        os  = reverse $ topSort (graph dg)
-        os' = map (\o -> lookup o (legend dg)) os
-        ds' = nub $ catMaybes os'
-    res <- mapM searchPackages ds'
-    pure $ catMaybes res
+getInfo :: Bool -> PackageConfig -> Smokehill (List (String, List String))
+getInfo prune ipkg = doGet [ipkg] []
   where
     doGet :: List PackageConfig
           -> List (String, List String)
           -> Smokehill (List (String, List String))
     doGet []     res = return res
     doGet (x:xs) res = do
-      let pdeps = pruneDeps (deps x)
-      ds' <- mapM searchPackages pdeps
-      let ds = catMaybes ds'
-      doGet (ds ++ xs) ([(name x, pdeps)] ++ res)
+      case pruneDeps (deps x) of
+        [] -> doGet xs ([(name x, [])] ++ res)
+        pdeps -> do
+          ds' <- mapM searchPackages pdeps
+          let ds = catMaybes ds'
+          let nodes = if prune then pdeps else deps x
+          doGet (ds ++ xs) ([(name x, nodes)] ++ res)
+
+sBuildGraph :: Bool -> PackageConfig -> Smokehill (DepGraph String)
+sBuildGraph p ipkg = do
+  ds <- getInfo p ipkg
+  pure (buildGraph ds)
+
+showDependencyGraph :: PackageConfig -> Smokehill ()
+showDependencyGraph ipkg = do
+  g <- sBuildGraph False ipkg
+  sPrintLn g
+
+getInstallOrder :: PackageConfig -> Smokehill (List PackageConfig)
+getInstallOrder ipkg = do
+    dg <- sBuildGraph True ipkg
+    let os  = reverse $ topSort (graph dg)
+        os' = map (\o -> lookup o (legend dg)) os
+        ds' = nub $ catMaybes os'
+    res <- mapM searchPackages ds'
+    pure $ catMaybes res

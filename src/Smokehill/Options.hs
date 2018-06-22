@@ -43,6 +43,9 @@ cmdParser = subparser (
   <> (command "audit"
       (info cmdAudit
             (progDesc "Check if iPKG file is correct..")))
+  <> (command "showPkgDeps"
+      (info cmdShowDeps
+            (progDesc "Show Package Dependencies.")))
   <> (command "convert"
       (info cmdConvert
             (progDesc "Generate an Yaml file for inclusion.")))
@@ -54,6 +57,9 @@ cmdParser = subparser (
 
       cmdSearch :: Parser Command
       cmdSearch = CMDSearch <$> argument str (metavar "PKG")
+
+      cmdShowDeps :: Parser Command
+      cmdShowDeps = CMDShowDeps <$> argument str (metavar "PKG")
 
       cmdShow :: Parser Command
       cmdShow = CMDShow <$> argument str (metavar "PKG")
@@ -111,3 +117,4 @@ data Command = CMDInstalled                       -- ^ List installed packages
              | CMDAudit String                    -- ^ Audit a ipkg file for use in conversion.
              | CMDUpdate                          -- ^ Update ipkg files.
              | CMDConvert String (Maybe FilePath) -- ^ Convert an ipkg file to yaml.
+             | CMDShowDeps String                 -- ^ Show a package dependencies

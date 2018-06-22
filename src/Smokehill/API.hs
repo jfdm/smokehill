@@ -9,6 +9,7 @@ module Smokehill.API
   , updatePackageIndex
   , auditPackage
   , convertPackageFile
+  , showPackageDependencies
   ) where
 
 import Control.Monad
@@ -116,6 +117,14 @@ listInstalled :: Smokehill ()
 listInstalled = do
   pkgs <- idrisPkgs
   mapM_ sPutStrLn pkgs
+
+showPackageDependencies :: String -> Smokehill ()
+showPackageDependencies pkg = do
+  res <- searchPackages pkg
+  case res of
+    Nothing    -> sPutStrLn "Package doesn't exist in repo."
+    Just ipkg  -> showDependencyGraph ipkg
+
 
 installPackage :: String -> Bool -> Bool -> Bool -> Smokehill()
 installPackage pkg dryrun force docs = do
